@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#06223a">
+<meta name="description" content="FISH! — sail the archipelago, catch the full fish index, complete quests, redeem codes and climb the global leaderboard. Made by Dave-VR.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FISH!">
+<title>FISH! 🎣 | Sail · Catch · Collect</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎣</text></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<canvas id="world"></canvas>
+<div id="minimapWrap"><canvas id="minimap" width="170" height="130"></canvas></div>
+
+<!-- ===== HUD ===== -->
+<header id="hud">
+  <div class="logo" onclick="UI.openHelp()">🎣 <span>FISH</span><em>archipelago</em></div>
+  <div class="hud-chips">
+    <button class="chip" id="chipName" onclick="UI.openName()">
+      <span id="hudName">ANGLE'R</span><span class="lv-pill" id="hudLv">Lv1</span>
+    </button>
+    <button class="chip" id="chipCoins" onclick="UI.openInv()">💰 <span id="hudCoins">0</span></button>
+    <button class="chip" id="chipIndex" onclick="UI.openIndex()">📖 <span id="hudIndex">0</span></button>
+    <button class="chip icon-only" id="chipChat" onclick="Multi.toggle()" title="Harbor Chat">💬<span class="chat-unread hidden" id="chatUnread">0</span><span class="chat-online hidden" id="chatOnline">0</span></button>
+    <button class="chip icon-only" id="chipWeather" title="Weather / time"><span id="hudWeather">🌤️</span><span id="hudTime">☀️</span></button>
+    <button class="chip icon-only" id="chipMenu" onclick="UI.openHelp()">⚙️</button>
+  </div>
+</header>
+
+<!-- Leviathan banner + timer -->
+<div id="leviWrap" class="hidden">
+  <div class="levi-banner">🦈 <b>A BABY LEVIATHAN IS NEAR!</b> Fish the open waters southwest of Tanglewood!</div>
+  <div class="levi-timer" id="leviTimer">--:--</div>
+</div>
+<div id="leviCountWrap" class="hidden"><span id="leviCountdown">--</span></div>
+
+<!-- Current location tag -->
+<div id="locTag"><span id="locName">Coconut Bay</span><span id="locPool"></span></div>
+
+<!-- Enchant Altar CTA (appears near The Altar) -->
+<button id="btnAltar" class="hidden" onclick="UI.openEnchant()">✨ Enchant Altar</button>
+
+<!-- ===== CONTROLS ===== -->
+<div id="joyZone"><div id="joy"><div id="joyKnob"></div></div></div>
+<button id="btnBoost" aria-label="Boost">⚡</button>
+<button id="btnCast" aria-label="Cast">🎣 <span id="castLbl">CAST</span></button>
+
+<!-- Fishing minigame -->
+<div id="fishUI" class="hidden">
+  <div class="gear-strip">
+    <span class="gear" id="gearRod">🎣 <b>Sunleaf Rod</b></span>
+    <span class="gear" id="gearLine">🧵 <b>Basic Line</b></span>
+    <span class="gear" id="gearBobber">🟠 <b>Basic Bobber</b></span>
+  </div>
+  <div class="fish-status" id="fishStatus"><span class="fish-dot" id="fishDot"></span><span id="fishName">Casting…</span></div>
+  <div class="reel-wrap">
+    <div class="reel" id="reel">
+      <div class="prog" id="progFill"></div>
+      <div class="sweet" id="sweet"></div>
+      <div class="perfect" id="perfect"></div>
+      <div class="marker" id="marker">🐟</div>
+    </div>
+  </div>
+  <button class="reel-btn" id="reelBtn">HOLD TO REEL</button>
+  <div class="fish-tip" id="fishTip">Hold REEL to keep the fish in the white zone — fill the meter to catch it!</div>
+</div>
+
+<!-- Harbor Chat -->
+<div id="chatPanel" class="hidden">
+  <div class="chat-head">
+    <b>💬 Harbor Chat</b>
+    <span class="chat-status" id="chatStatus">🌐 connecting…</span>
+    <button class="chat-close" id="chatClose" aria-label="Close">✕</button>
+  </div>
+  <div class="chat-log" id="chatLog"></div>
+  <div class="chat-bar">
+    <input id="chatMsg" maxlength="120" placeholder="Say something… (Enter to send)" autocomplete="off">
+    <button id="chatSend" aria-label="Send">➤</button>
+  </div>
+</div>
+
+<!-- ===== BOTTOM NAV ===== -->
+<nav id="bottomNav">
+  <button onclick="UI.openIndex()">📖<span>Index</span></button>
+  <button onclick="UI.openShop()">🛍️<span>Shop</span></button>
+  <button onclick="UI.openBoats()">🚤<span>Boats</span></button>
+  <button onclick="UI.openQuests()">🎯<span>Quests</span></button>
+  <button onclick="UI.openBoard()">🏆<span>Board</span></button>
+  <button onclick="UI.openHelp()">📖<span>Menu</span></button>
+</nav>
+
+<div id="toasts"></div>
+
+<!-- ================= MODALS ================= -->
+
+<!-- Login -->
+<div class="veil veil-login hidden" id="veilName">
+  <div class="login-waves"><i></i><i></i><i></i></div>
+  <div class="modal modal-welcome">
+    <div class="avatar-circle" id="avatarCircle">🪝</div>
+    <h1 class="login-title">FISH<span>!</span></h1>
+    <p class="modal-sub">Sail the archipelago, fill the fish index and climb the leaderboard.<br>Pick a fisher name to set sail.</p>
+    <div class="name-field">
+      <input id="nameInput" maxlength="16" placeholder="Your fisher name" autocomplete="off" oninput="document.getElementById('nameLen').textContent=this.value.length+'/16';UI.previewAvatar(this.value)">
+      <button type="button" class="dice" onclick="UI.randomName()" title="Random name">🎲</button>
+      <span class="name-len" id="nameLen">0/16</span>
+    </div>
+    <button class="btn-primary btn-block btn-sail" onclick="UI.submitName()">⛵ Set Sail</button>
+    <div class="welcome-feats">
+      <div><span>🛶</span><em>Island-hopping</em></div>
+      <div><span>📖</span><em>Full fish index</em></div>
+      <div><span>🏆</span><em>Live leaderboard</em></div>
+    </div>
+  </div>
+</div>
+
+<!-- Catch result -->
+<div class="veil hidden" id="veilCatch">
+  <div class="modal">
+    <div class="catch-img" id="catchImg"></div>
+    <h1 id="catchName">Catch!</h1>
+    <p class="modal-sub" id="catchMeta"></p>
+    <div class="catch-badges" id="catchBadges"></div>
+    <div class="catch-new hidden" id="catchNew">✨ NEW FISH! Added to your index!</div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="UI.closeCatch()">Nice!</button>
+    </div>
+  </div>
+</div>
+
+<!-- Fish Index -->
+<div class="veil hidden" id="veilIndex">
+  <div class="modal modal-wide">
+    <h1>📖 Fish Index</h1>
+    <p class="modal-sub" id="indexCount">0 / 0 discovered</p>
+    <div class="chip-row" id="indexChips"></div>
+    <div class="fish-grid" id="indexGrid"></div>
+    <div class="modal-actions"><button class="btn-primary" onclick="UI.close('veilIndex')">Close</button></div>
+  </div>
+</div>
+
+<!-- Gear Shop -->
+<div class="veil hidden" id="veilShop">
+  <div class="modal modal-wide">
+    <h1>🛍️ Gear Shop</h1>
+    <p class="modal-sub" id="shopLoc"></p>
+    <div class="chip-row" id="shopTabs">
+      <button class="on" data-t="rods">🎣 Rods</button>
+      <button data-t="lines">🧵 Lines</button>
+      <button data-t="bobbers">🟠 Bobbers</button>
+    </div>
+    <div class="shop-list" id="shopList"></div>
+    <div class="modal-actions"><button class="btn-primary" onclick="UI.close('veilShop')">Close</button></div>
+  </div>
+</div>
+
+<!-- Boat Shop -->
+<div class="veil hidden" id="veilBoats">
+  <div class="modal modal-wide">
+    <h1>🚤 Nessa's Waveworks</h1>
+    <p class="modal-sub">Boats are sold on every island. Boost with Shift or the ⚡ button.</p>
+    <div class="shop-list" id="boatList"></div>
+    <div class="modal-actions"><button class="btn-primary" onclick="UI.close('veilBoats')">Close</button></div>
+  </div>
+</div>
+
+<!-- Inventory / Sell -->
+<div class="veil hidden" id="veilInv">
+  <div class="modal modal-wide">
+    <h1>🎒 Inventory</h1>
+    <p class="modal-sub" id="invValue">Sell fish for coins!</p>
+    <div class="inv-toolbar">
+      <button class="btn-ghost btn-sm" id="sellAllBtn" onclick="UI.sellAll()">💰 Sell All</button>
+      <span class="lb-status" id="invCount"></span>
+    </div>
+    <div class="inv-list" id="invList"></div>
+    <h2 class="inv-head">🧪 Items &amp; Relics</h2>
+    <div class="inv-items" id="invItems"></div>
+    <div class="modal-actions"><button class="btn-primary" onclick="UI.close('veilInv')">Close</button></div>
+  </div>
+</div>
+
+<!-- Quests -->
+<div class="veil hidden" id="veilQuests">
+  <div class="modal modal-wide">
+    <h1>🎯 Quests &amp; Bounties</h1>
+    <h2 class="inv-head">🗓️ Today's Bounties <span class="reset-in" id="bountyReset"></span></h2>
+    <div id="bountyList"></div>
+    <h2 class="inv-head">📜 Active Quests</h2>
+    <div id="questList"></div>
+    <div class="modal-actions"><button class="btn-primary" onclick="UI.close('veilQuests')">Close</button></div>
+  </div>
+</div>
+
+<!-- Titles -->
+<div class="veil hidden" id="veilTitles">
+  <div class="modal modal-wide">
+    <h1>🏅 Titles</h1>
+    <p class="modal-sub" id="titleCount">0 earned</p>
+    <div class="title-grid" id="titleGrid"></div>
+    <div class="modal-actions"><button class="btn-primary" onclick="UI.close('veilTitles')">Close</button></div>
+  </div>
+</div>
+
+<!-- Codes -->
+<div class="veil hidden" id="veilCodes">
+  <div class="modal modal-wide">
+    <h1>🎟️ Redeem Codes</h1>
+    <div class="code-row">
+      <input id="codeInput" maxlength="24" placeholder="Enter a code…" autocomplete="off">
+      <button class="btn-primary" onclick="UI.redeemCode()">Redeem</button>
+    </div>
+    <div id="codeList"></div>
+    <div class="modal-actions"><button class="btn-primary" onclick="UI.close('veilCodes')">Close</button></div>
+  </div>
+</div>
+
+<!-- Enchanting -->
+<div class="veil hidden" id="veilEnchant">
+  <div class="modal modal-wide">
+    <h1>✨ Enchanting Altar</h1>
+    <p class="modal-sub">Spend relics to re-roll your rod's enchantment. Pity: every <b>200 points</b> guarantees a Legendary.</p>
+    <div class="enchant-cur" id="enchantCur"></div>
+    <div class="enchant-rel" id="enchantRelics"></div>
+    <div id="enchantLog"></div>
+    <div class="modal-actions"><button class="btn-primary" onclick="UI.close('veilEnchant')">Close</button></div>
+  </div>
+</div>
+
+<!-- Leaderboard -->
+<div class="veil hidden" id="veilBoard">
+  <div class="modal modal-wide">
+    <h1>🏆 Archipelago Leaderboard</h1>
+    <p class="modal-sub">Live board — synced via MantleDB every 20 seconds.</p>
+    <div class="board-toolbar">
+      <button class="btn-ghost btn-sm" onclick="Net.refresh()">Refresh ⟳</button>
+      <span class="lb-status" id="lbStatus">Loading…</span>
+    </div>
+    <div class="lb-list" id="lbList"><div class="lb-empty">Loading the ocean… 🌊</div></div>
+    <div class="modal-actions"><button class="btn-primary" onclick="UI.close('veilBoard')">Close</button></div>
+  </div>
+</div>
+
+<!-- Help / Settings -->
+<div class="veil hidden" id="veilHelp">
+  <div class="modal modal-wide">
+    <h1>📖 How to Play</h1>
+    <div class="help-card"><span class="step-num">01</span><div><b>Drive your boat</b><p>Steer with WASD / arrow keys, drag the left joystick on mobile, boost with Shift or ⚡. Sail to each island and fish its waters!</p></div></div>
+    <div class="help-card"><span class="step-num">02</span><div><b>Cast &amp; reel</b><p>Tap 🎣 CAST, then HOLD REEL when the fish icon drifts into the white zone at the center of the vertical bar. The fish icon's color shows its rarity — better rods catch rarer fish!</p></div></div>
+    <div class="help-card"><span class="step-num">03</span><div><b>Weather &amp; time</b><p>Some fish only bite at certain times of day or in certain weather. Moonrain doubles your luck; Ancient Tide boosts relics.</p></div></div>
+    <div class="help-card"><span class="step-num">04</span><div><b>Sell fish</b><p>Open your inventory to sell fish for coins. Upgrade rods, lines &amp; bobbers at each island's shop.</p></div></div>
+    <div class="help-card"><span class="step-num">05</span><div><b>Complete quests</b><p>Islanders want specific fish. Complete quests for coins, XP, titles and even boat unlocks!</p></div></div>
+    <div class="help-card"><span class="step-num">06</span><div><b>The Altar</b><p>Off Crescent Isle, spend relics to enchant your rod. 200 pity points guarantee a Legendary.</p></div></div>
+    <div class="help-card"><span class="step-num">07</span><div><b>The Leviathan</b><p>Every even hour (UTC) a baby Leviathan appears. Catch its parts before it swims away!</p></div></div>
+    <div class="help-card"><span class="step-num">08</span><div><b>Codes &amp; titles</b><p>Redeem codes in the shop menu and unlock titles by catching, selling, leveling &amp; filling the index.</p></div></div>
+    <div class="help-card"><span class="step-num">09</span><div><b>Multiplayer &amp; chat</b><p>You share the ocean with other anglers in real time — sail together and see their nameplates. Tap 💬 in the top bar to open Harbor Chat; messages pop up in bubbles over everyone's head.</p></div></div>
+
+    <div class="settings-block">
+      <button class="btn-ghost" onclick="UI.openTitles()">🏅 View Titles</button>
+      <button class="btn-ghost" onclick="UI.openCodes()">🎟️ Redeem Codes</button>
+      <button class="btn-ghost" onclick="UI.toggleAutoSell()"><span id="autoSellLbl">🤖 Auto-Sell: OFF</span></button>
+      <button class="btn-ghost" onclick="UI.toggleSound()"><span id="soundLbl">🔊 Sound: ON</span></button>
+      <button class="btn-danger" onclick="UI.resetGame()">🗑️ Reset All &amp; Clear My Score</button>
+    </div>
+
+    <div class="about-box">Made with 💙 by <b>Dave-VR</b>.</div>
+    <div class="modal-actions"><button class="btn-primary" onclick="UI.close('veilHelp')">Back to Sea</button></div>
+  </div>
+</div>
+
+<script src="fish-data.js"></script>
+<script src="gear-data.js"></script>
+<script src="world-data.js"></script>
+<script src="net.js"></script>
+<script src="multi.js"></script>
+<script src="game.js"></script>
+<script src="ui.js"></script>
+</body>
+</html>
