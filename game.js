@@ -1494,6 +1494,26 @@ function drawSign(isl){
   }
   ctx.restore();
 }
+function updateIslandSigns(){
+  const layer=byId('islandSignLayer');
+  if(!layer) return;
+  if(!layer.children.length){
+    ISLANDS.forEach(isl=>{
+      const sign=document.createElement('div'); sign.className='island-sign'; sign.dataset.island=isl.id;
+      sign.textContent=isl.name; layer.appendChild(sign);
+    });
+  }
+  ISLANDS.forEach(isl=>{
+    const sign=layer.querySelector('[data-island="'+isl.id+'"]'); if(!sign) return;
+    const p=worldToScreen(isl.x+isl.r*.30,isl.y+isl.r*.02);
+    const visible=p.x>-160&&p.x<W+160&&p.y>-90&&p.y<H+90;
+    sign.style.display=visible?'block':'none';
+    if(visible){
+      const scale=Math.max(.62,Math.min(1.05,G.cam.zoom*.95));
+      sign.style.left=p.x+'px'; sign.style.top=p.y+'px'; sign.style.transform='translate(-50%,-100%) scale('+scale+')';
+    }
+  });
+}
 
 /* ---------------- special pool shaders ---------------- */
 const POOL_PARTS = {};
@@ -1755,7 +1775,7 @@ function drawIslands(){
     ctx.fillStyle = halo;
     ctx.beginPath(); ctx.arc(isl.x, isl.y, r*1.8, 0, Math.PI*2); ctx.fill();
     /* Island top plus its camera-facing vertical cliff faces. */
-    const shoreScale=.72, cliffHeight=48;
+    const shoreScale=.72, cliffHeight=92;
     const dropX=Math.sin(CAMERA_YAW)*cliffHeight/WORLD_Y_SCALE, dropY=Math.cos(CAMERA_YAW)*cliffHeight/WORLD_Y_SCALE;
     islPolyPath(isl.x+dropX,isl.y+dropY,pts,shoreScale);
     ctx.fillStyle='rgba(0,19,31,.32)'; ctx.fill();
@@ -1771,6 +1791,8 @@ function drawIslands(){
     ctx.strokeStyle = 'rgba(255,255,255,'+(0.30 + 0.10*Math.sin(G.frame*0.05 + i))+')';
     islPolyPath(isl.x, isl.y, pts, shoreScale-.015);
     ctx.stroke();
+    /* The grass/rock interior is a second, smaller raised terrace above the beach. */
+    drawIslandCliffs(isl,pts,.49,27,th.dark);
     /* land */
     islPolyPath(isl.x, isl.y, pts, 0.49);
     const lg = ctx.createLinearGradient(0, isl.y - r*0.5, 0, isl.y + r*0.6);
@@ -1858,7 +1880,7 @@ function drawIslands(){
       ctx.arc(isl.x + r*0.06, isl.y + r*0.18, 1.2*shim, 0, Math.PI*2);
       ctx.fill();
     }
-    drawSign(isl);
+    /* Signboards are rendered as screen-upright billboards after the world pass. */
   });
 
   POOLS.forEach((p, i) => {
@@ -2276,6 +2298,7 @@ function loop(t){
 
   drawOcean();
   drawIslands();
+  updateIslandSigns();
   drawBoat();
   updateLandAvatar();
   drawOverlays();
