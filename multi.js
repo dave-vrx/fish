@@ -262,15 +262,16 @@ const Multi = (()=>{
       });
       if(line) lines.push(line);
       const lh=13;
-      const cw=Math.max(40, Math.min(210, Math.max(...lines.map(l=>ctx.measureText(l).width))+14));
-      const ch=lines.length*lh+9;
+      const cw=Math.max(40, Math.min(210, Math.max(...lines.map(l=>ctx.measureText(l).width))+16));
+      const ch=lines.length*lh+12;
       const cx=sx, cy=sy-96;
       ctx.fillStyle='rgba(6,20,34,.85)';
       roundRect(cx-cw/2,cy-ch,cw,ch,9); ctx.fill();
       ctx.strokeStyle='rgba(255,255,255,.28)'; ctx.lineWidth=1; ctx.stroke();
       ctx.beginPath(); ctx.moveTo(cx-5,cy+ch-1); ctx.lineTo(cx+5,cy+ch-1); ctx.lineTo(cx,cy+ch+6); ctx.closePath(); ctx.fill();
       ctx.fillStyle='#eaf6ff';
-      lines.forEach((l,i)=>ctx.fillText(l, cx, cy-ch/2+lh/2+i*lh));
+      const padTop=(ch-lines.length*lh)/2;
+      lines.forEach((l,i)=>ctx.fillText(l, cx, cy-ch+padTop+lh/2+i*lh));
     }
     if(title){
       ctx.font='700 7.5px system-ui,sans-serif';
