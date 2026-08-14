@@ -1676,16 +1676,16 @@ function drawBoatSprite(c, id, scale){
   switch(id){
     case 'surf':
       c.fillStyle = '#ffb347';
-      c.beginPath(); c.moveTo(0,-16); c.quadraticCurveTo(6,-10,6,6); c.quadraticCurveTo(6,12,0,14); c.quadraticCurveTo(-6,12,-6,6); c.quadraticCurveTo(-6,-10,0,-16); c.closePath(); c.fill(); c.stroke();
-      c.fillStyle = '#2f7bd6'; c.fillRect(-6,-6,12,3);
-      c.fillStyle = '#f0c8a0'; c.beginPath(); c.arc(0,-4,2.6,0,Math.PI*2); c.fill();
-      c.fillStyle = '#222'; c.fillRect(-1.5,-2,3,7);
+      c.beginPath(); c.moveTo(16,0); c.quadraticCurveTo(10,6,-6,6); c.quadraticCurveTo(-12,6,-14,0); c.quadraticCurveTo(-12,-6,-6,-6); c.quadraticCurveTo(10,-6,16,0); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = '#2f7bd6'; c.fillRect(3,-6,3,12);
+      c.fillStyle = '#f0c8a0'; c.beginPath(); c.arc(4,0,2.6,0,Math.PI*2); c.fill();
+      c.fillStyle = '#222'; c.fillRect(-5,-1.5,7,3);
       break;
     case 'canoe':
       c.fillStyle = '#7c4a23';
-      c.beginPath(); c.moveTo(0,-17); c.quadraticCurveTo(5,-6,5,7); c.lineTo(0,12); c.lineTo(-5,7); c.quadraticCurveTo(-5,-6,0,-17); c.closePath(); c.fill(); c.stroke();
-      c.fillStyle = '#a86f3a'; c.fillRect(-4.5,-4,9,4);
-      c.fillStyle = '#f0c8a0'; c.beginPath(); c.arc(0,-4,2.4,0,Math.PI*2); c.fill();
+      c.beginPath(); c.moveTo(17,0); c.quadraticCurveTo(6,5,-7,5); c.lineTo(-12,0); c.lineTo(-7,-5); c.quadraticCurveTo(6,-5,17,0); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = '#a86f3a'; c.fillRect(0,-4.5,4,9);
+      c.fillStyle = '#f0c8a0'; c.beginPath(); c.arc(4,0,2.4,0,Math.PI*2); c.fill();
       break;
     case 'rowboat':
       c.fillStyle = '#8a5a2b';
@@ -1722,9 +1722,9 @@ function drawBoatSprite(c, id, scale){
       break;
     case 'manta':
       c.fillStyle = '#2a3a52';
-      c.beginPath(); c.moveTo(0,-13); c.quadraticCurveTo(7,-8,14,4); c.quadraticCurveTo(7,6,0,2); c.quadraticCurveTo(-7,6,-14,4); c.quadraticCurveTo(-7,-8,0,-13); c.closePath(); c.fill(); c.stroke();
-      c.fillStyle = '#f0c8a0'; c.beginPath(); c.arc(0,-5,2.2,0,Math.PI*2); c.fill();
-      c.strokeStyle = 'rgba(174,224,255,.7)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(-11,3); c.quadraticCurveTo(0,7,11,3); c.stroke();
+      c.beginPath(); c.moveTo(13,0); c.quadraticCurveTo(8,7,-4,14); c.quadraticCurveTo(-6,7,-2,0); c.quadraticCurveTo(-6,-7,-4,-14); c.quadraticCurveTo(8,-7,13,0); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = '#f0c8a0'; c.beginPath(); c.arc(5,0,2.2,0,Math.PI*2); c.fill();
+      c.strokeStyle = 'rgba(174,224,255,.7)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(-3,-11); c.quadraticCurveTo(-7,0,-3,11); c.stroke();
       break;
     case 'stego':
       c.fillStyle = '#6b7c52'; c.fillRect(-11,-4,22,9);

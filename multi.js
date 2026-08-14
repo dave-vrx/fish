@@ -231,11 +231,7 @@ const Multi = (()=>{
     ctx.beginPath(); ctx.ellipse(2,3,14,9,0,0,Math.PI*2); ctx.fill();
     drawBoatSprite(ctx, p.boat, 0.85);
     ctx.fillStyle=p.color||'#fff';
-    ctx.fillRect(-3,-4,7,8);
-    ctx.fillStyle='#f0c8a0';
-    ctx.beginPath(); ctx.arc(-1,-9,3,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle=p.color||'#fff';
-    ctx.fillRect(-4,-7,6,5);
+    ctx.beginPath(); ctx.moveTo(-14,-5); ctx.lineTo(-11,0); ctx.lineTo(-14,5); ctx.closePath(); ctx.fill();
     ctx.restore();
   }
 
