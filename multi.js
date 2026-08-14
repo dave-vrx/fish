@@ -318,10 +318,9 @@ const Multi = (()=>{
   function draw(){
     if(!started) return;
     const z=G.cam.zoom;
-    const halfX=W/(2*z), halfY=H/(2*z);
+    const halfX=W/(2*z), halfY=H/(2*z*WORLD_Y_SCALE);
     ctx.save();
-    ctx.scale(z,z);
-    ctx.translate(-G.cam.x+halfX, -G.cam.y+halfY);
+    applyWorldTransform(ctx);
     for(const id in players){
       const p=players[id];
       if(p.x<G.cam.x-halfX-40||p.x>G.cam.x+halfX+40||p.y<G.cam.y-halfY-40||p.y>G.cam.y+halfY+40) continue;
@@ -331,12 +330,13 @@ const Multi = (()=>{
     const now=Date.now();
     for(const id in players){
       const p=players[id];
-      const sx=(p.x-G.cam.x)*z+W/2, sy=(p.y-G.cam.y)*z+H/2;
+      const sx=(p.x-G.cam.x)*z+W/2, sy=(p.y-G.cam.y)*z*WORLD_Y_SCALE+H/2;
       if(sx<-90||sx>W+90||sy<-160||sy>H+70) continue;
       drawTag(sx,sy,p.name,p.lvl,p.color, (now-p.chatAt<BUBBLE_MS)?p.chat:null, p.title, p.badges);
     }
     if(G.save.name){
-      const mx=(G.boat.x-G.cam.x)*z+W/2, my=(G.boat.y-G.cam.y)*z+H/2;
+      const actor=G.player.onFoot?G.player:G.boat;
+      const mx=(actor.x-G.cam.x)*z+W/2, my=(actor.y-G.cam.y)*z*WORLD_Y_SCALE+H/2;
       if(mx>-90&&mx<W+90&&my>-160&&my<H+70){
         drawTag(mx,my,G.save.name,G.save.level,myColor(), (now-myBubble.at<BUBBLE_MS)?myBubble.text:null, activeTitle(), G.save.badges||{});
       }

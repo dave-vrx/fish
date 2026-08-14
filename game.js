@@ -1111,7 +1111,7 @@ function toggleLand(){
   const isl=landableIsland();
   if(!isl){ toast('Sail close to an island shore first.','bad'); return; }
   const dx=b.x-isl.x, dy=b.y-isl.y, d=Math.max(1,Math.hypot(dx,dy));
-  p.onFoot=true; p.island=isl.id; p.x=isl.x+dx/d*isl.r*.43; p.y=isl.y+dy/d*isl.r*.43; p.head=b.head; b.speed=0;
+  p.onFoot=true; p.island=isl.id; p.x=isl.x+dx/d*isl.r*.50; p.y=isl.y+dy/d*isl.r*.50; p.head=b.head; b.speed=0;
   toast('🧍 You stepped ashore. Explore the island!','good');
 }
 function updatePlayer(dt){
@@ -1121,11 +1121,11 @@ function updatePlayer(dt){
   const mag=Math.hypot(dx,dy);
   if(mag>0.02){
     dx/=Math.max(1,mag); dy/=Math.max(1,mag); p.head=Math.atan2(dy,dx);
-    p.x+=dx*118*dt; p.y+=dy*118*dt;
+    p.x+=dx*150*dt; p.y+=dy*150*dt;
   }
   const isl=islandById(p.island);
   if(isl){
-    const ox=p.x-isl.x, oy=p.y-isl.y, d=Math.hypot(ox,oy), limit=isl.r*.46;
+    const ox=p.x-isl.x, oy=p.y-isl.y, d=Math.hypot(ox,oy), limit=isl.r*.58;
     if(d>limit){ p.x=isl.x+ox/d*limit; p.y=isl.y+oy/d*limit; }
   }
 }
@@ -1246,6 +1246,16 @@ const THEME = {
   twilight:{ water:'#3b2f6e', sand:'#5c4a8f', land:'#4a3a78', dark:'#2f2452', decor:'#c58cff', halo:'#7a6fd0' },
   rock:{ water:'#1f7fc2', sand:'#8f8f8f', land:'#6a6a6a', dark:'#4a4a4a', decor:'#b8f2ff', halo:'#79c8ea' }
 };
+const WORLD_Y_SCALE=0.79;
+function applyWorldTransform(c){
+  const z=G.cam.zoom;
+  c.translate(W/2,H/2);
+  c.scale(z,z*WORLD_Y_SCALE);
+  c.translate(-G.cam.x,-G.cam.y);
+}
+function worldViewport(){
+  return {x:G.cam.x-W/(2*G.cam.zoom),y:G.cam.y-H/(2*G.cam.zoom*WORLD_Y_SCALE),w:W/G.cam.zoom,h:H/(G.cam.zoom*WORLD_Y_SCALE)};
+}
 
 function resize(){
   DPR = Math.min(2, window.devicePixelRatio || 1);
@@ -1264,10 +1274,8 @@ function drawOcean(){
   ctx.fillStyle = g;
   ctx.fillRect(0,0,W,H);
   ctx.save();
-  ctx.scale(G.cam.zoom, G.cam.zoom);
-  ctx.translate(-G.cam.x + W/(2*G.cam.zoom), -G.cam.y + H/(2*G.cam.zoom));
-  const vx = G.cam.x - W/(2*G.cam.zoom), vy = G.cam.y - H/(2*G.cam.zoom);
-  const vw = W/G.cam.zoom, vh = H/G.cam.zoom;
+  applyWorldTransform(ctx);
+  const v=worldViewport(); const vx=v.x, vy=v.y, vw=v.w, vh=v.h;
   const spacing = 64;
   const offY = (G.frame*7) % spacing;
   const xS = Math.floor(vx/spacing)*spacing, yS = Math.floor(vy/spacing)*spacing;
@@ -1668,9 +1676,8 @@ function drawPoolFX(p, i){
 
 function drawIslands(){
   ctx.save();
-  ctx.scale(G.cam.zoom, G.cam.zoom);
-  ctx.translate(-G.cam.x + W/(2*G.cam.zoom), -G.cam.y + H/(2*G.cam.zoom));
-  const view = { x:G.cam.x - W/(2*G.cam.zoom), y:G.cam.y - H/(2*G.cam.zoom), w:W/G.cam.zoom, h:H/G.cam.zoom };
+  applyWorldTransform(ctx);
+  const view = worldViewport();
   ISLANDS.forEach((isl, i) => {
     const r = isl.r;
     if(isl.x + r*1.9 < view.x || isl.x - r*1.9 > view.x + view.w || isl.y + r*1.9 < view.y || isl.y - r*1.9 > view.y + view.h) return;
@@ -1975,8 +1982,7 @@ function drawBoatSprite(c, id, scale){
 
 function drawBoat(){
   ctx.save();
-  ctx.scale(G.cam.zoom, G.cam.zoom);
-  ctx.translate(-G.cam.x + W/(2*G.cam.zoom), -G.cam.y + H/(2*G.cam.zoom));
+  applyWorldTransform(ctx);
   const b = G.boat;
   ctx.translate(b.x, b.y);
   if(b.speed > 8){
@@ -2008,12 +2014,14 @@ function drawBoat(){
   drawBoatSprite(ctx, save.boat, 1);
   if(G.player.onFoot){
     const p=G.player;
-    ctx.save(); ctx.translate(p.x-b.x,p.y-b.y);
-    ctx.fillStyle='rgba(0,10,20,.28)'; ctx.beginPath(); ctx.ellipse(0,7,6,2.6,0,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='#f0c8a0'; ctx.beginPath(); ctx.arc(0,-6,4,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='#ffd166'; ctx.fillRect(-4,-2,8,10);
-    ctx.fillStyle='#163754'; ctx.fillRect(-4,7,3,5); ctx.fillRect(1,7,3,5);
-    ctx.fillStyle='#0d2134'; ctx.beginPath(); ctx.arc(-1.4,-6.5,.75,0,Math.PI*2); ctx.arc(1.4,-6.5,.75,0,Math.PI*2); ctx.fill();
+    const walking=Math.hypot(G.input.x,G.input.y)>0.02||G.input.joyMag>.02;
+    const bob=walking?Math.sin(G.frame*.36)*1.5:0;
+    ctx.save(); ctx.translate(p.x-b.x,p.y-b.y+bob); ctx.scale(1.55,1.55);
+    ctx.fillStyle='rgba(0,10,20,.28)'; ctx.beginPath(); ctx.ellipse(0,8,7,3,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#f0c8a0'; ctx.beginPath(); ctx.arc(0,-7,4.4,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#ffcf5e'; ctx.fillRect(-4.8,-2,9.6,10);
+    ctx.fillStyle='#163754'; ctx.fillRect(-4.5,7,3.2,walking?4:5); ctx.fillRect(1.3,7,3.2,walking?5:4);
+    ctx.fillStyle='#0d2134'; ctx.beginPath(); ctx.arc(-1.5,-7.5,.8,0,Math.PI*2); ctx.arc(1.5,-7.5,.8,0,Math.PI*2); ctx.fill();
     ctx.restore();
   }
   ctx.restore();
@@ -2141,7 +2149,7 @@ function loop(t){
   const focus=G.player.onFoot?G.player:G.boat;
   G.cam.x += (focus.x - G.cam.x) * Math.min(1, delta*5);
   G.cam.y += (focus.y - G.cam.y) * Math.min(1, delta*5);
-  G.cam.zoom = Math.max(0.5, Math.min(1.5, W/780));
+  G.cam.zoom = G.player.onFoot ? Math.max(.8,Math.min(1.72,W/620)) : Math.max(0.5, Math.min(1.5, W/780));
 
   if(Math.random() < delta*3 && G.sparkles.length < 90){
     G.sparkles.push({ x: G.cam.x - W/(2*G.cam.zoom) + Math.random()*(W/G.cam.zoom),
