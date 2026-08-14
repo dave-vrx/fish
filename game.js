@@ -42,7 +42,7 @@ function freshSave(){
     ownedRods: ['stick','sunleaf'], ownedLines: ['basic'], ownedBobbers: ['basic'], ownedBoats: ['surf'],
     enchant: null, pity: 0, enchantLog: [],
     quests: { done: {}, active: {} },
-    titles: { done: {} },
+    titles: { done: {} }, selectedTitle: '',
     codes: {},
     autopets: {}, autoSell: false, badges: {},
     avatar: { gender:'female', skin:'warm', hair:'long', hairColor:'brown', outfit:'teal' },
@@ -60,6 +60,9 @@ function loadSave(){
     save = Object.assign(freshSave(), raw);
     save.quests = Object.assign({done:{},active:{}}, raw.quests||{});
     save.titles = Object.assign({done:{}}, raw.titles||{});
+    save.selectedTitle = (raw.selectedTitle && save.titles.done[raw.selectedTitle]) ? raw.selectedTitle : '';
+    /* Keep the title old saves were already showing selected after this upgrade. */
+    if(!Object.prototype.hasOwnProperty.call(raw,'selectedTitle')) save.selectedTitle=activeTitle()||'';
     save.stats = Object.assign({totalCaught:0,totalSold:0,perfect:0,big:0,maxWt:0,bounties:0}, raw.stats||{});
     save.badges = Object.assign({}, raw.badges||{});
     save.avatar = Object.assign({gender:'female', skin:'warm', hair:'long', hairColor:'brown', outfit:'teal'}, raw.avatar||{});
@@ -683,6 +686,7 @@ function claimBounty(i){
 
 /* ---------------- titles ---------------- */
 function activeTitle(){
+  if(save.selectedTitle && save.titles.done[save.selectedTitle]) return save.selectedTitle;
   let best = null, bestRank = -1;
   for(const name in save.titles.done){
     const rank = TITLES.findIndex(t => t.name === name);
@@ -691,9 +695,16 @@ function activeTitle(){
   }
   return best;
 }
+function equipTitle(name){
+  if(name && !save.titles.done[name]) return false;
+  save.selectedTitle=name||'';
+  persist(); Net.bump();
+  return true;
+}
 function grantTitle(name, silent){
   if(save.titles.done[name]) return;
   save.titles.done[name] = true;
+  if(!save.selectedTitle) save.selectedTitle=name;
   if(!silent) toast('🏅 Title unlocked: '+name+'!', 'gold');
   Net.bump();
 }
@@ -2319,7 +2330,7 @@ const Game = {
   curRod, curEnchant, statSums, detectLoc, cast, sellFish, sellAll, sellItem, useItem,
   buyGear, equipGear, buyBoat, equipBoat, boatRoulette, doEnchant, redeemCode,
   claimQuest, claimBounty, genBounties, updateBounties, questUnlocked, activeQuests, questProg,
-  grantTitle, checkTitle, checkIndexCompletion, addXp, xpNeed, addItem,
+  grantTitle, equipTitle, checkTitle, checkIndexCompletion, addXp, xpNeed, addItem,
   itemCanShow, leviStatus, leviHealth, leviHunterCount, relicToKey, locName, effLuck, effAtt, fishValue, toggleLand,
   updateHud, resetSave, questMap: ()=>QUESTS,
   titles: ()=>TITLES, codes: ()=>CODES, poolMods: POOL_MODS,

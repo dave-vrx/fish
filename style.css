@@ -431,8 +431,9 @@ input{font-family:inherit}
 .title-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .title-card{
   display:flex;flex-direction:column;gap:3px;background:rgba(6,36,60,.55);border:1px solid var(--line);
-  border-radius:12px;padding:10px;position:relative;
+  border-radius:12px;padding:10px;position:relative;text-align:left;color:var(--ink);font-family:inherit;
 }
+.title-card:not(.locked){cursor:pointer}.title-card:not(.locked):hover,.title-card.selected{border-color:var(--gold);background:rgba(126,88,16,.23);box-shadow:0 0 0 1px rgba(255,209,102,.18) inset}.title-card.title-none{justify-content:center;min-height:66px}
 .title-card .t-title{font-size:13px;font-weight:900;color:var(--gold)}
 .title-card .t-how{font-size:10px;color:var(--dim);line-height:1.35}
 .title-card.locked{opacity:.45;filter:grayscale(.6)}
