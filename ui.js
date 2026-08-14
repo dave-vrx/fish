@@ -1,6 +1,6 @@
 'use strict';
 /* ============================================================
-   FISH! — UI: modals, index, shop, inventory, quests, board
+   ANGLER! — UI: modals, index, shop, inventory, quests, board
    Made by Dave-VR
    ============================================================ */
 

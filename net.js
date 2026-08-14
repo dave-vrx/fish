@@ -1,6 +1,6 @@
 'use strict';
 /* ============================================================
-   FISH! — MantleDB cloud layer
+   ANGLER! — MantleDB cloud layer
    Free, no-login cloud storage via MantleDB (keyless JSON store).
    - Pick a name (no password) → your name + progress go on the
      global leaderboard, tracked live like the other IDLE games.

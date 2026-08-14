@@ -1,6 +1,6 @@
 'use strict';
 /* ============================================================
-   FISH! — Friends & Private Messages (MantleDB polling)
+   ANGLER! — Friends & Private Messages (MantleDB polling)
    - Friends: symmetric buddy list stored in the cloud bucket.
    - DMs: per-sender outbox slots (`dms[from][to]`) so two users
      never write the same key. Inbox = everyone else's slot to me.

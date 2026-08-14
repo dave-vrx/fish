@@ -1,6 +1,6 @@
 'use strict';
 /* ============================================================
-   FISH! — Multiplayer & Harbor Chat (MantleDB polling)
+   ANGLER! — Multiplayer & Harbor Chat (MantleDB polling)
    - Presence: every angler's boat position/heading syncs ~1.2s,
      smoothed client-side so everyone sails together in real time.
    - Chat: global harbor chat; the last message shows as a bubble

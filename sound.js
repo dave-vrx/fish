@@ -1,6 +1,6 @@
 'use strict';
 /* ============================================================
-   FISH! — Sound: engine rumble + turbo boost (WebAudio)
+   ANGLER! — Sound: engine rumble + turbo boost (WebAudio)
    Made by Dave-VR
    ============================================================ */
 

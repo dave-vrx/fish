@@ -1,6 +1,6 @@
 'use strict';
 /* ============================================================
-   FISH! — Gear, Boats, Enchantments, Items & Potions
+   ANGLER! — Gear, Boats, Enchantments, Items & Potions
    ============================================================ */
 
 const RODS = [

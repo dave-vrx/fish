@@ -1,6 +1,6 @@
 'use strict';
 /* ============================================================
-   FISH! — Quests, Titles, Codes, World layout & Fishing pools
+   ANGLER! — Quests, Titles, Codes, World layout & Fishing pools
    ============================================================ */
 
 /* Quests. req: [{fish:Name | rarity:Rarity | trash:true, count:n}] */

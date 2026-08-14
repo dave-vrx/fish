@@ -1,6 +1,6 @@
 'use strict';
 /* ============================================================
-   FISH! — Game engine: world, boat, fishing, economy
+   ANGLER! — Game engine: world, boat, fishing, economy
    Made by Dave-VR
    ============================================================ */
 
