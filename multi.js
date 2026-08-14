@@ -12,12 +12,13 @@
 const Multi = (()=>{
   const PRES_URL='https://mantledb.sh/v2/fishvr/presence';
   const CHAT_URL='https://mantledb.sh/v2/fishvr/chat';
+  const ANN_URL='https://mantledb.sh/v2/fishvr/announcement';
   const COLORS=['#ff5d6c','#ffd166','#46e0a0','#3ee0ff','#c58cff','#ff9de8','#ff8c00','#ff6b9d','#b6ff5e','#7fe7ff'];
   const PRES_INT=1200, CHAT_INT=1400, STALE=22000, BUBBLE_MS=7000;
 
   const players={};            // id -> remote angler
   let myId='', myColorVal='';
-  let chatLog=[];
+  let chatLog=[], lastAnnouncement='';
   let lastSend=0, unread=0, open=false, started=false, online=0, ready=false, sessionHeard=false;
   let myBubble={text:null, at:0};
 
@@ -109,6 +110,26 @@ const Multi = (()=>{
     }catch(e){}
   }
 
+  async function fetchAnnouncement(){
+    try{
+      const r=await fetch(ANN_URL,{cache:'no-store'}); if(!r.ok) return;
+      const d=await r.json(), a=d&&d.announcement;
+      if(!a||!a.id||a.id===lastAnnouncement||Date.now()-(a.at||0)>90000) return;
+      lastAnnouncement=a.id; showAnnouncement(a);
+    }catch(e){}
+  }
+  function showAnnouncement(a){
+    const el=byId('globalAnnouncement'); if(!el) return;
+    el.textContent='📣 DAVE: '+String(a.text||'').slice(0,160); el.classList.remove('hidden');
+    clearTimeout(showAnnouncement.timer); showAnnouncement.timer=setTimeout(()=>el.classList.add('hidden'),11000);
+  }
+  function sendAnnouncement(text){
+    if(String(G.save.name||'').trim().toLowerCase()!=='dave'){ toast('Announcements are reserved for Dave.','bad'); return; }
+    text=String(text||'').replace(/\s+/g,' ').trim().slice(0,160); if(!text) return;
+    const a={id:pid()+':announcement:'+Date.now(),text,at:Date.now()}; lastAnnouncement=a.id; showAnnouncement(a);
+    fetch(ANN_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({announcement:a,updated:a.at})}).catch(()=>{});
+  }
+
   function sendChat(text){
     text=String(text||'').replace(/\s+/g,' ').trim().slice(0,120);
     if(!text) return;
@@ -181,6 +202,7 @@ const Multi = (()=>{
       renderLog(); statusText();
       const inp=byId('chatMsg');
       if(inp) setTimeout(()=>inp.focus(),60);
+      const admin=byId('announceBar'); if(admin) admin.classList.toggle('hidden',String(G.save.name||'').trim().toLowerCase()!=='dave');
     }else{
       const inp=byId('chatMsg'); if(inp) inp.blur();
     }
@@ -370,7 +392,7 @@ const Multi = (()=>{
     if(started) return;
     started=true;
     pid(); myColor();
-    const pulse=()=>{ sendPos(); fetchPlayers(); fetchChat(); };
+    const pulse=()=>{ sendPos(); fetchPlayers(); fetchChat(); fetchAnnouncement(); };
     pulse();
     setInterval(pulse, PRES_INT);
     setInterval(fetchChat, CHAT_INT);
@@ -378,12 +400,15 @@ const Multi = (()=>{
     if(send) send.addEventListener('click', ()=>{ const i=byId('chatMsg'); sendChat(i?i.value:''); if(i) i.value=''; });
     const inp=byId('chatMsg');
     if(inp) inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ sendChat(inp.value); inp.value=''; } });
+    const announce=byId('announceSend'), announceInput=byId('announceMsg');
+    if(announce) announce.addEventListener('click',()=>{ sendAnnouncement(announceInput?announceInput.value:''); if(announceInput) announceInput.value=''; });
+    if(announceInput) announceInput.addEventListener('keydown',e=>{ if(e.key==='Enter'){ sendAnnouncement(announceInput.value); announceInput.value=''; } });
     const closeBtn=byId('chatClose');
     if(closeBtn) closeBtn.addEventListener('click', ()=>toggle(false));
   }
   function init(){ start(); }
 
-  return { init, start, toggle, send:sendChat, tick, draw,
+  return { init, start, toggle, send:sendChat, announce:sendAnnouncement, tick, draw,
     get online(){ return online; }, get players(){ return players; }, get open(){ return open; } };
 })();
 window.Multi=Multi;

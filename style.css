@@ -216,6 +216,8 @@ input{font-family:inherit}
 .chat-bar input:focus{border-color:var(--cyan)}
 .chat-bar button{width:38px;border-radius:999px;background:linear-gradient(180deg,#3aa,#155);color:#fff;
   border:1px solid #7ff2c4;font-size:14px;font-weight:800}
+.announce-bar{display:flex;gap:6px;padding:7px 8px;background:rgba(92,58,9,.3);border-top:1px solid rgba(255,209,102,.38)}.announce-bar input{flex:1;min-width:0;background:rgba(18,26,43,.9);border:1px solid #d7ad49;border-radius:999px;padding:8px 12px;color:var(--text);font-size:12px;outline:none}.announce-bar button{width:38px;border-radius:999px;background:linear-gradient(180deg,#ffd166,#a66b12);color:#352100;border:1px solid #fff0a0;font-size:14px}.announce-bar.hidden{display:none}
+#globalAnnouncement{position:fixed;top:calc(66px + env(safe-area-inset-top,0px));left:50%;z-index:55;max-width:min(560px,88vw);transform:translateX(-50%);padding:11px 18px;border:1px solid #ffe39a;border-radius:12px;background:linear-gradient(100deg,rgba(78,48,4,.97),rgba(24,47,72,.97));color:#fff5c7;font:900 14px/1.25 system-ui,sans-serif;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.42),0 0 16px rgba(255,207,80,.28)}
 
 /* ============ BOTTOM NAV ============ */
 #bottomNav{
