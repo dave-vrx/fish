@@ -50,7 +50,7 @@ const Multi = (()=>{
       arr=arr.filter(p=>p&&p.id&&p.id!==pid()&&(now-(p.at||0))<STALE).slice(0,48);
       arr.push({ id:pid(), name:(G.save.name||'Angler').slice(0,16), color:myColor(),
         lvl:G.save.level||1, x:Math.round(G.boat.x), y:Math.round(G.boat.y),
-        head:Math.round(G.boat.head*100)/100, boat:save.boat, title:(activeTitle()||''), at:now });
+        head:Math.round(G.boat.head*100)/100, boat:save.boat, title:(activeTitle()||''), beta:!!(save.badges&&save.badges.betaTester), at:now });
       await fetch(PRES_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({players:arr,updated:now})});
     }catch(e){}
   }
@@ -68,14 +68,14 @@ const Multi = (()=>{
         let pl=players[p.id];
         if(!pl){
           pl={ id:p.id, name:p.name||'Angler', color:p.color||colorOf(p.id), lvl:p.lvl||1, boat:p.boat||'surf',
-            title:p.title||'', x:+(p.x||0), y:+(p.y||0), head:+(p.head||0),
+            title:p.title||'', beta:!!p.beta, x:+(p.x||0), y:+(p.y||0), head:+(p.head||0),
             tx:+(p.x||0), ty:+(p.y||0), th:+(p.head||0),
             chat:null, chatAt:0, at:now };
           players[p.id]=pl;
         }
         pl.tx=+(p.x||pl.tx); pl.ty=+(p.y||pl.ty); pl.th=+(p.head||pl.th);
         pl.name=p.name||pl.name; pl.lvl=p.lvl||pl.lvl; pl.boat=p.boat||pl.boat;
-        pl.title=p.title||pl.title; pl.color=p.color||pl.color; pl.at=now;
+        pl.title=p.title||pl.title; pl.beta=!!p.beta; pl.color=p.color||pl.color; pl.at=now;
       }
       for(const id in players){ if(now-players[id].at>STALE+5000) delete players[id]; }
       online=Object.keys(players).length;
@@ -235,7 +235,7 @@ const Multi = (()=>{
     ctx.restore();
   }
 
-  function drawTag(sx,sy,name,lvl,color,chat,title){
+  function drawTag(sx,sy,name,lvl,color,chat,title,beta){
     ctx.save();
     ctx.textAlign='center'; ctx.textBaseline='middle';
     if(chat){
@@ -292,6 +292,11 @@ const Multi = (()=>{
     ctx.fillText(String(name).slice(0,16), sx, y+8);
     ctx.fillStyle=color||'#fff'; ctx.font='800 8.5px system-ui,sans-serif';
     ctx.fillText('Lv'+(lvl||1), sx, y+15.5);
+    if(beta){
+      ctx.fillStyle='#ffd166'; ctx.strokeStyle='#fff0a0'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.arc(x+w-2,y+2,6,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='#4b2a00'; ctx.font='900 8px system-ui,sans-serif'; ctx.fillText('✦',x+w-2,y+2.3);
+    }
     ctx.restore();
   }
 
@@ -313,12 +318,12 @@ const Multi = (()=>{
       const p=players[id];
       const sx=(p.x-G.cam.x)*z+W/2, sy=(p.y-G.cam.y)*z+H/2;
       if(sx<-90||sx>W+90||sy<-160||sy>H+70) continue;
-      drawTag(sx,sy,p.name,p.lvl,p.color, (now-p.chatAt<BUBBLE_MS)?p.chat:null, p.title);
+      drawTag(sx,sy,p.name,p.lvl,p.color, (now-p.chatAt<BUBBLE_MS)?p.chat:null, p.title, p.beta);
     }
     if(G.save.name){
       const mx=(G.boat.x-G.cam.x)*z+W/2, my=(G.boat.y-G.cam.y)*z+H/2;
       if(mx>-90&&mx<W+90&&my>-160&&my<H+70){
-        drawTag(mx,my,G.save.name,G.save.level,myColor(), (now-myBubble.at<BUBBLE_MS)?myBubble.text:null, activeTitle());
+        drawTag(mx,my,G.save.name,G.save.level,myColor(), (now-myBubble.at<BUBBLE_MS)?myBubble.text:null, activeTitle(), !!(G.save.badges&&G.save.badges.betaTester));
       }
     }
   }

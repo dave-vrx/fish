@@ -12,6 +12,7 @@ const Net = (()=>{
   const LB_URL='https://mantledb.sh/v2/fishvr/leaderboard';
   const BNT_URL='https://mantledb.sh/v2/fishvr/bounties';
   const LEVI_URL='https://mantledb.sh/v2/fishvr/leviathan';
+  const LEVI_BASE_HP=16, LEVI_HP_PER_HUNTER=14, LEVI_MAX_HUNTERS=8;
 
   let scores=[];
   let myId='';
@@ -183,27 +184,40 @@ const Net = (()=>{
     start.setUTCMinutes(0,0,0);
     return { key:start.toISOString().slice(0,13), start, end:new Date(start.getTime()+600000), active:now-start<600000 };
   }
-  function freshLevi(w){ return {hour:w.key,hp:100,maxHp:100,winner:null,at:Date.now()}; }
-  async function refreshLeviathan(){
+  function huntHp(hunters){ return LEVI_BASE_HP+LEVI_HP_PER_HUNTER*Math.max(1,Math.min(LEVI_MAX_HUNTERS,hunters||1)); }
+  function freshLevi(w,hunters){
+    const n=Math.max(1,Math.min(LEVI_MAX_HUNTERS,hunters||1));
+    const hp=huntHp(n);
+    return {hour:w.key,hp,maxHp:hp,hunters:n,winner:null,at:Date.now()};
+  }
+  async function refreshLeviathan(hunters){
     const w=leviWindow();
     if(!w.active){ G.state.levi=null; return null; }
     try{
       const r=await fetch(LEVI_URL,{cache:'no-store'});
       const d=r.ok?await r.json():null;
-      G.state.levi=(d&&d.hour===w.key)?d:freshLevi(w);
+      G.state.levi=(d&&d.hour===w.key)?d:freshLevi(w,hunters);
     }catch(e){
-      if(!G.state.levi||G.state.levi.hour!==w.key) G.state.levi=freshLevi(w);
+      if(!G.state.levi||G.state.levi.hour!==w.key) G.state.levi=freshLevi(w,hunters);
     }
     return G.state.levi;
   }
-  async function damageLeviathan(){
+  async function damageLeviathan(hunters){
     const w=leviWindow();
     if(!w.active||!G.save.name) return {ok:false};
     try{
       const r=await fetch(LEVI_URL,{cache:'no-store'});
       const d=r.ok?await r.json():null;
-      const event=(d&&d.hour===w.key)?d:freshLevi(w);
+      const event=(d&&d.hour===w.key)?d:freshLevi(w,hunters);
       if(event.hp<=0){ G.state.levi=event; return {ok:false,finished:true}; }
+      /* The target only grows when new anglers arrive. It never shrinks,
+         so someone leaving cannot make the hunt suddenly unwinnable. */
+      const active=Math.max(1,Math.min(LEVI_MAX_HUNTERS,hunters||1));
+      const recorded=Math.max(1,event.hunters||1);
+      if(active>recorded){
+        const extra=huntHp(active)-huntHp(recorded);
+        event.hp+=extra; event.maxHp+=extra; event.hunters=active;
+      }
       event.hp=Math.max(0,(event.hp||100)-1);
       let won=false;
       if(event.hp===0){ event.winner={id:getMyId(),name:(G.save.name||'Angler').slice(0,16),at:Date.now()}; won=true; }

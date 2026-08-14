@@ -59,7 +59,8 @@ const BOATS = [
   { id:'luxury',     name:'Luxury Speedboat', emoji:'🏎️', cost:1000000,  tier:5, seats:7,  speed:4, accel:4, tough:2.5,boost:5   },
   { id:'manta',      name:'Manta',            emoji:'🐋', cost:4000000,  tier:5, seats:7,  speed:4, accel:4, tough:2.5,boost:5   },
   { id:'stego',      name:'Stego III',        emoji:'🦖', cost:null,     tier:4, seats:6,  speed:3, accel:3, tough:2.5,boost:1, src:'Roulette (1% — $50,000 a spin)' },
-  { id:'galleon',    name:'Galleon',          emoji:'⛴️', cost:8000000,  tier:3, seats:11, speed:2, accel:2, tough:1,  boost:0.5, unlock:'quest_galleon' }
+  { id:'galleon',    name:'Galleon',          emoji:'⛴️', cost:8000000,  tier:3, seats:11, speed:2, accel:2, tough:1,  boost:0.5, unlock:'quest_galleon' },
+  { id:'skull',      name:'Skullcrusher',     emoji:'💀', cost:0,        tier:5, seats:4,  speed:4, accel:4, tough:2.5,boost:5, src:'Secret code: SKULL', unlock:'code_skull' }
 ];
 
 /* Enchantments (name, rarity, special, luck, str, exp, att, big, maxW, xp%) */

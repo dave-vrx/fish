@@ -58,7 +58,8 @@ const TITLES = [
   { name:'Pastrami Enjoyer',   how:'Help Celly find her keys!',  type:'quest', q:'breakin', bonus:true },
   { name:'Junior Detective',   how:"Hemlock's Apprentice",       type:'quest', q:'detective' },
   { name:'Archaeologist',      how:'Helped out Harrison!',       type:'quest', q:'harrison_gator' },
-  { name:'Transporter',        how:'Complete Sunleaf Delivery',  type:'quest', q:'sunleaf' }
+  { name:'Transporter',        how:'Complete Sunleaf Delivery',  type:'quest', q:'sunleaf' },
+  { name:'BETA TESTER',        how:'Redeem the secret SKULL code', type:'code', bonus:true }
 ];
 
 const CODES = [
@@ -66,7 +67,8 @@ const CODES = [
   { code:'FISHLAUNCH',reward:'3x Speed Potion + 3x Luck Potion', active:false, items:{speedP:3,luckP:3} },
   { code:'STPADDYS',  reward:'5x Luck Potion + 25x Token',       active:false, items:{luckP:5} },
   { code:'LEVIATHAN', reward:'5x Speed Potion + 5x Mossy Relic', active:false, items:{speedP:5,relicMos:5} },
-  { code:'MAKESHIP',  reward:'Vlad Autopet',                     active:false, items:{autopet:'vlad'} }
+  { code:'MAKESHIP',  reward:'Vlad Autopet',                     active:false, items:{autopet:'vlad'} },
+  { code:'SKULL',     reward:'Skullcrusher boat + BETA TESTER title', active:true, hidden:true, boats:['skull'], titles:['BETA TESTER'], badges:['betaTester'] }
 ];
 
 /* Autopets — auto-sell your catches (toggle in Menu) */

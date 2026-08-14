@@ -44,7 +44,7 @@ function freshSave(){
     quests: { done: {}, active: {} },
     titles: { done: {} },
     codes: {},
-    autopets: {}, autoSell: false,
+    autopets: {}, autoSell: false, badges: {},
     potionLuck: 0, potionSpeed: 0,
     bounties: { date: '', list: [] },
     stats: { totalCaught:0, totalSold:0, perfect:0, big:0, maxWt:0, bounties:0 },
@@ -60,6 +60,7 @@ function loadSave(){
     save.quests = Object.assign({done:{},active:{}}, raw.quests||{});
     save.titles = Object.assign({done:{}}, raw.titles||{});
     save.stats = Object.assign({totalCaught:0,totalSold:0,perfect:0,big:0,maxWt:0,bounties:0}, raw.stats||{});
+    save.badges = Object.assign({}, raw.badges||{});
   }
 }
 function persist(){
@@ -167,8 +168,21 @@ function leviStatus(){
 function leviHealth(){
   const lv=leviStatus();
   const event=G.state.levi;
-  if(!lv.active||!event) return {hp:100,maxHp:100,winner:null};
-  return {hp:Math.max(0,Math.min(event.maxHp||100,event.hp==null?100:event.hp)),maxHp:event.maxHp||100,winner:event.winner||null};
+  const hunters=Math.max(1,(event&&event.hunters)||leviHunterCount());
+  const fallback=16+14*hunters;
+  if(!lv.active||!event) return {hp:fallback,maxHp:fallback,hunters,winner:null};
+  const maxHp=event.maxHp||fallback;
+  return {hp:Math.max(0,Math.min(maxHp,event.hp==null?maxHp:event.hp)),maxHp,hunters,winner:event.winner||null};
+}
+function leviHunterCount(){
+  let n=0;
+  if(Math.hypot(G.boat.x-LEVIATHAN_SPOT.x,G.boat.y-LEVIATHAN_SPOT.y)<LEVIATHAN_SPOT.r) n++;
+  const players=(window.Multi&&Multi.players)||{};
+  for(const id in players){
+    const p=players[id];
+    if(Math.hypot(p.x-LEVIATHAN_SPOT.x,p.y-LEVIATHAN_SPOT.y)<LEVIATHAN_SPOT.r) n++;
+  }
+  return Math.max(1,n);
 }
 
 /* ---------------- location ---------------- */
@@ -548,7 +562,7 @@ function resolveCatch(){
 }
 
 function damageLeviathanCatch(){
-  Net.damageLeviathan().then(result=>{
+  Net.damageLeviathan(leviHunterCount()).then(result=>{
     if(!result.ok) return;
     if(result.won) awardLeviathanWinner(result.event.hour);
   });
@@ -878,6 +892,12 @@ function redeemCode(code){
   if(save.codes[c.code]){ toast('You already redeemed this code.', 'bad'); return false; }
   save.codes[c.code] = true;
   for(const k in (c.items||{})) addItem(k, c.items[k]);
+  for(const id of (c.boats||[])){
+    if(save.ownedBoats.indexOf(id)===-1) save.ownedBoats.push(id);
+    save.boat=id;
+  }
+  for(const title of (c.titles||[])) grantTitle(title, true);
+  for(const badge of (c.badges||[])) save.badges[badge]=true;
   persist();
   toast('🎟️ Code redeemed: '+c.reward+'!', 'gold');
   UI.refreshCodes();
@@ -1097,6 +1117,7 @@ function setStatus(msg, cls){
 function updateHud(){
   byId('hudCoins').textContent = fmt(save.coins);
   byId('hudName').textContent = (save.name || 'Angler').toUpperCase();
+  byId('betaBadge').classList.toggle('hidden', !(save.badges&&save.badges.betaTester));
   byId('hudLv').textContent = 'Lv'+save.level;
   byId('hudIndex').textContent = Object.keys(save.index).length;
   byId('hudWeather').textContent = (WEATHER_ICONS[G.state.weather]||'🌤️');
@@ -1110,7 +1131,7 @@ function updateHud(){
     byId('leviWrap').classList.remove('hidden');
     byId('leviCountWrap').classList.remove('hidden');
     const rem = Math.max(0, lv.end.getTime() - Date.now());
-    byId('leviHp').textContent=health.hp+' / '+health.maxHp;
+    byId('leviHp').textContent=health.hp+' / '+health.maxHp+' · '+Math.max(1,health.hunters||1)+' hunter'+((health.hunters||1)===1?'':'s');
     byId('leviBar').style.width=(health.hp/health.maxHp*100)+'%';
     byId('leviTimer').textContent = health.hp<=0 ? '🏆 '+(health.winner?health.winner.name:'An angler')+' landed the final catch!' : '⌛ Leviathan swims away in '+mmss(rem/1000);
     byId('leviCountdown').textContent = '🦈 '+health.hp+'/'+health.maxHp+' · '+mmss(rem/1000);
@@ -1725,7 +1746,7 @@ function drawBabyLeviathan(s, health){
   const w=156,h=10,barY=y-68,ratio=health.hp/health.maxHp;
   ctx.fillStyle='rgba(3,9,22,.9)'; roundRect(x-w/2-4,barY-21,w+8,29,7); ctx.fill();
   ctx.font='900 10px system-ui,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillStyle='#ffe8a8'; ctx.fillText('BABY LEVIATHAN  '+health.hp+'/'+health.maxHp,x,barY-10);
+  ctx.fillStyle='#ffe8a8'; ctx.fillText('BABY LEVIATHAN  '+health.hp+'/'+health.maxHp+' · '+Math.max(1,health.hunters||1)+' HUNTER'+((health.hunters||1)===1?'':'S'),x,barY-10);
   ctx.fillStyle='rgba(255,255,255,.16)'; roundRect(x-w/2,barY,w,h,5); ctx.fill();
   if(ratio>0){ ctx.fillStyle=ratio>.4?'#ff6b70':'#ff334f'; roundRect(x-w/2,barY,Math.max(5,w*ratio),h,5); ctx.fill(); }
 }
@@ -1809,6 +1830,14 @@ function drawBoatSprite(c, id, scale){
       c.fillStyle = '#e9dcc0'; c.fillRect(-10,-7,9,7);
       c.fillStyle = '#8a5a2b'; c.fillRect(-4,-11,2,6);
       c.fillStyle = '#f0c8a0'; c.beginPath(); c.arc(-3,-5,2,0,Math.PI*2); c.fill();
+      break;
+    case 'skull':
+      c.fillStyle = '#ff5da2';
+      c.beginPath(); c.moveTo(18,0); c.quadraticCurveTo(7,-11,-14,0); c.quadraticCurveTo(7,11,18,0); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = '#ff9bc8'; c.beginPath(); c.ellipse(4,-3,10,5,-.15,0,Math.PI*2); c.fill();
+      c.fillStyle = '#fff4fb'; c.beginPath(); c.arc(2,-2,5,0,Math.PI*2); c.fill();
+      c.fillStyle = '#4b1640'; c.beginPath(); c.arc(0,-3,1.35,0,Math.PI*2); c.arc(4,-3,1.35,0,Math.PI*2); c.fill(); c.fillRect(1,-.5,3,2);
+      c.strokeStyle = '#ffd166'; c.lineWidth=1.4; c.beginPath(); c.moveTo(-12,2); c.lineTo(13,2); c.stroke();
       break;
     default:
       c.fillStyle = '#fff';
@@ -1959,7 +1988,7 @@ function loop(t){
   G.leviSyncTimer -= delta;
   if(G.leviSyncTimer <= 0){
     G.leviSyncTimer = 3;
-    if(leviStatus().active && window.Net) Net.refreshLeviathan();
+    if(leviStatus().active && window.Net) Net.refreshLeviathan(leviHunterCount());
   }
   updateAltarBtn();
   G.cam.x += (G.boat.x - G.cam.x) * Math.min(1, delta*5);
@@ -1997,7 +2026,7 @@ const Game = {
   buyGear, equipGear, buyBoat, equipBoat, boatRoulette, doEnchant, redeemCode,
   claimQuest, claimBounty, genBounties, updateBounties, questUnlocked, activeQuests, questProg,
   grantTitle, checkTitle, checkIndexCompletion, addXp, xpNeed, addItem,
-  itemCanShow, leviStatus, leviHealth, relicToKey, locName, effLuck, effAtt, fishValue,
+  itemCanShow, leviStatus, leviHealth, leviHunterCount, relicToKey, locName, effLuck, effAtt, fishValue,
   updateHud, resetSave, questMap: ()=>QUESTS,
   titles: ()=>TITLES, codes: ()=>CODES, poolMods: POOL_MODS,
   indexCount: ()=>Object.keys(save.index).length,

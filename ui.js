@@ -408,6 +408,7 @@ const UI = {
     const list = byId('codeList');
     let html = '';
     for(const c of CODES){
+      if(c.hidden) continue;
       const used = !!G.save.codes[c.code];
       html += '<div class="code-item">'+
         '<span class="c-code">'+escapeHtml(c.code)+'</span>'+
