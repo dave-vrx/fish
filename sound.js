@@ -5,7 +5,7 @@
    ============================================================ */
 
 const Sound = {
-  a: null, engOsc: null, engGain: null, engF: null, pinkAt: 0, pinkStep: 0, witchAt: 0, witchStep: 0,
+  a: null, engOsc: null, engGain: null, engF: null, pinkAt: 0, pinkStep: 0, witchAt: 0, witchStep: 0, jackAt: 0,
   noise: null, noiseGain: null, boostOsc: null, boostGain: null,
 
   init(){
@@ -76,5 +76,11 @@ const Sound = {
     o.type='sine'; o.frequency.value=notes[this.witchStep++%notes.length]; f.type='lowpass'; f.frequency.value=520;
     g.gain.setValueAtTime(.05,t); g.gain.exponentialRampToValueAtTime(.001,t+.62);
     o.connect(f); f.connect(g); g.connect(this.a.destination); o.start(t); o.stop(t+.64);
+  },
+  jackTrail(){
+    if(!G.save || !G.save.sound || !this.a) return;
+    const t=this.a.currentTime; if(t<this.jackAt) return; this.jackAt=t+.8;
+    const o=this.a.createOscillator(), g=this.a.createGain(); o.type='triangle'; o.frequency.value=130;
+    g.gain.setValueAtTime(.035,t); g.gain.exponentialRampToValueAtTime(.001,t+.45); o.connect(g); g.connect(this.a.destination); o.start(t); o.stop(t+.46);
   }
 };

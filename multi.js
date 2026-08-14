@@ -50,7 +50,7 @@ const Multi = (()=>{
       arr=arr.filter(p=>p&&p.id&&p.id!==pid()&&(now-(p.at||0))<STALE).slice(0,48);
       arr.push({ id:pid(), name:(G.save.name||'Angler').slice(0,16), color:myColor(),
         lvl:G.save.level||1, x:Math.round(G.boat.x), y:Math.round(G.boat.y),
-        head:Math.round(G.boat.head*100)/100, boat:save.boat, title:(activeTitle()||''), badges:{betaTester:!!(save.badges&&save.badges.betaTester),daveTest:!!(save.badges&&save.badges.daveTest),creator:!!(save.badges&&save.badges.creator),booty:!!(save.badges&&save.badges.booty),pinkfong:!!(save.badges&&save.badges.pinkfong),witchy:!!(save.badges&&save.badges.witchy)}, at:now });
+        head:Math.round(G.boat.head*100)/100, boat:save.boat, title:(activeTitle()||''), badges:{betaTester:!!(save.badges&&save.badges.betaTester),daveTest:!!(save.badges&&save.badges.daveTest),creator:!!(save.badges&&save.badges.creator),booty:!!(save.badges&&save.badges.booty),jack:!!(save.badges&&save.badges.jack),pinkfong:!!(save.badges&&save.badges.pinkfong),witchy:!!(save.badges&&save.badges.witchy)}, at:now });
       await fetch(PRES_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({players:arr,updated:now})});
     }catch(e){}
   }
@@ -318,14 +318,18 @@ const Multi = (()=>{
       ctx.fillStyle='#9b4be3'; ctx.strokeStyle='#f0d8ff'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(bx,y+2,6,0,Math.PI*2); ctx.fill(); ctx.stroke();
       ctx.fillStyle='#fff'; ctx.font='900 8px system-ui,sans-serif'; ctx.fillText('◆',bx,y+2.2);
     }
-    if(badges.pinkfong){
+    if(badges.jack){
       const bx=x+w-2+(badges.betaTester?14:0)+(badges.daveTest?14:0)+(badges.creator?14:0)+(badges.booty?14:0);
+      ctx.fillStyle='#4b382c'; ctx.strokeStyle='#eee0bd'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(bx,y+2,6,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.fillStyle='#fff1d3'; ctx.font='900 8px system-ui,sans-serif'; ctx.fillText('☠',bx,y+2.2);
+    }
+    if(badges.pinkfong){
+      const bx=x+w-2+(badges.betaTester?14:0)+(badges.daveTest?14:0)+(badges.creator?14:0)+(badges.booty?14:0)+(badges.jack?14:0);
       ctx.fillStyle='#ff65b7'; ctx.strokeStyle='#ffe5f5'; ctx.lineWidth=1;
       ctx.beginPath(); ctx.arc(bx,y+2,6,0,Math.PI*2); ctx.fill(); ctx.stroke();
       ctx.fillStyle='#fff'; ctx.font='900 8px system-ui,sans-serif'; ctx.fillText('★',bx,y+2.3);
     }
     if(badges.witchy){
-      const bx=x+w-2+(badges.betaTester?14:0)+(badges.daveTest?14:0)+(badges.creator?14:0)+(badges.booty?14:0)+(badges.pinkfong?14:0);
+      const bx=x+w-2+(badges.betaTester?14:0)+(badges.daveTest?14:0)+(badges.creator?14:0)+(badges.booty?14:0)+(badges.jack?14:0)+(badges.pinkfong?14:0);
       ctx.fillStyle='#161423'; ctx.strokeStyle='#d9bd70'; ctx.lineWidth=1;
       ctx.beginPath(); ctx.arc(bx,y+2,6,0,Math.PI*2); ctx.fill(); ctx.stroke();
       ctx.fillStyle='#f5dc91'; ctx.font='900 9px system-ui,sans-serif'; ctx.fillText('☾',bx,y+2.1);

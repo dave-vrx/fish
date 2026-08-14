@@ -92,7 +92,7 @@ const G = {
   fish: { state:'idle', pool:null, t:0, biteAt:0, game:null, catch:null },
   effects: [], sparkles: [],
   blockedIsland: null,
-  saveTimer: 0, hudTimer: 0, mmTimer: 0, leviSyncTimer: 0, pinkTrailTimer: 0, witchTrailTimer: 0, betaTrailTimer: 0, betaTrailIndex: 0, weatherDur: 0,
+  saveTimer: 0, hudTimer: 0, mmTimer: 0, leviSyncTimer: 0, pinkTrailTimer: 0, witchTrailTimer: 0, jackTrailTimer: 0, betaTrailTimer: 0, betaTrailIndex: 0, weatherDur: 0,
   frame: 0
 };
 const Fishing = { lastBiteCheck:0, held:false, lastStatus:'' };
@@ -1113,6 +1113,10 @@ function updateBoat(dt){
       if(typeof Sound!=='undefined') Sound.witchTrail();
     }
   }else G.witchTrailTimer=0;
+  if(save.boat==='jack' && Math.abs(b.speed)>10){
+    G.jackTrailTimer+=dt;
+    if(G.jackTrailTimer>=.2){ G.jackTrailTimer=0; const side=(Math.random()-.5)*24; G.effects.push({type:'tentacle',x:b.x-Math.sin(b.head)*24+Math.cos(b.head)*side,y:b.y+Math.cos(b.head)*24+Math.sin(b.head)*side,t:0,phase:Math.random()*6.28}); if(typeof Sound!=='undefined') Sound.jackTrail(); }
+  }else G.jackTrailTimer=0;
   if(save.boat === 'davetest' && Math.abs(b.speed) > 10){
     G.betaTrailTimer += dt;
     if(G.betaTrailTimer >= 0.13){
@@ -1225,6 +1229,7 @@ function updateHud(){
   byId('davetestBadge').classList.toggle('hidden', !(save.badges&&save.badges.daveTest));
   byId('creatorBadge').classList.toggle('hidden', !(save.badges&&save.badges.creator));
   byId('bootyBadge').classList.toggle('hidden', !(save.badges&&save.badges.booty));
+  byId('jackBadge').classList.toggle('hidden', !(save.badges&&save.badges.jack));
   byId('pinkfongBadge').classList.toggle('hidden', !(save.badges&&save.badges.pinkfong));
   byId('witchyBadge').classList.toggle('hidden', !(save.badges&&save.badges.witchy));
   byId('hudLv').textContent = 'Lv'+save.level;
@@ -2125,6 +2130,14 @@ function drawBoatSprite(c, id, scale){
       c.fillStyle='#2a104d'; c.fillRect(-2,-14,2,12); c.fillStyle='#bd7bff'; c.beginPath(); c.moveTo(0,-14); c.lineTo(10,-10); c.lineTo(0,-5); c.closePath(); c.fill();
       c.fillStyle='#ffd166'; c.beginPath(); c.arc(-7,-2,2.4,0,Math.PI*2); c.fill(); c.fillStyle='#fff1a6'; c.beginPath(); c.arc(-8,-3,0.8,0,Math.PI*2); c.fill();
       break;
+    case 'jack':
+      c.fillStyle='#2b1b15'; c.beginPath(); c.moveTo(28,0); c.quadraticCurveTo(9,-16,-25,0); c.quadraticCurveTo(8,16,28,0); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle='#704225'; c.beginPath(); c.moveTo(24,-1); c.quadraticCurveTo(8,-9,-20,0); c.quadraticCurveTo(7,9,24,-1); c.closePath(); c.fill();
+      c.strokeStyle='#c89245'; c.lineWidth=1.6; c.beginPath(); c.moveTo(-19,3); c.lineTo(24,3); c.stroke();
+      c.fillStyle='#4b2d1b'; c.fillRect(-1,-27,2,22); c.fillStyle='#17120f'; c.beginPath(); c.moveTo(1,-26); c.lineTo(18,-20); c.lineTo(1,-12); c.closePath(); c.fill();
+      c.fillStyle='#eee0bd'; c.font='900 8px system-ui,sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.fillText('☠',8,-19);
+      c.fillStyle='#d4a05c'; c.beginPath(); c.arc(-7,-4,2.2,0,Math.PI*2); c.fill();
+      break;
     default:
       c.fillStyle = '#fff';
       c.beginPath(); c.moveTo(16,0); c.quadraticCurveTo(4,-11,-14,0); c.quadraticCurveTo(4,11,16,0); c.closePath(); c.fill(); c.stroke();
@@ -2137,6 +2150,10 @@ function drawBoat(){
   applyWorldTransform(ctx);
   const b = G.boat;
   ctx.translate(b.x, b.y);
+  if(save.boat==='jack' || activeTitle()==='JACK'){
+    const dark=ctx.createRadialGradient(0,0,4,0,0,72); dark.addColorStop(0,'rgba(5,4,12,.68)'); dark.addColorStop(.52,'rgba(13,10,27,.32)'); dark.addColorStop(1,'rgba(10,7,22,0)');
+    ctx.fillStyle=dark; ctx.beginPath(); ctx.ellipse(0,0,72,35,0,0,Math.PI*2); ctx.fill();
+  }
   if(b.speed > 8){
     for(let i = G.effects.length-1; i >= 0; i--){
       const e = G.effects[i];
@@ -2169,6 +2186,11 @@ function drawBoat(){
         ctx.save(); ctx.translate(e.x-b.x,e.y-b.y-e.t*5); ctx.fillStyle='rgba(139,105,220,'+a+')'; ctx.shadowColor='#8b69dc'; ctx.shadowBlur=10;
         ctx.beginPath(); ctx.arc(0,0,sz,0,Math.PI*2); ctx.fill();
         ctx.fillStyle='rgba(238,218,255,'+a+')'; ctx.beginPath(); ctx.arc(-1,-1,sz*.3,0,Math.PI*2); ctx.fill(); ctx.restore();
+        continue;
+      }
+      if(e.type==='tentacle'){
+        const a=1-e.t/1.4; ctx.save(); ctx.translate(e.x-b.x,e.y-b.y); ctx.strokeStyle='rgba(95,64,126,'+a+')'; ctx.lineWidth=3; ctx.lineCap='round';
+        ctx.beginPath(); ctx.moveTo(0,7); for(let q=1;q<5;q++) ctx.quadraticCurveTo(Math.sin(q*1.8+e.phase+e.t*4)*7,q*5,Math.sin((q+1)*1.8+e.phase+e.t*4)*8,(q+1)*5); ctx.stroke(); ctx.restore();
         continue;
       }
       if(e.type !== 'wake') continue;

@@ -63,7 +63,8 @@ const TITLES = [
   { name:'PINKFONG!',          how:'Redeem the secret PINKFONG code', type:'code', bonus:true, color:'#ff65b7' },
   { name:'WITCHY',             how:'Redeem the secret WITCHY code', type:'code', bonus:true, color:'#d9bd70' },
   { name:'CREATOR',            how:'Redeem the secret DAVEVR code', type:'code', bonus:true, color:'#ffffff', size:'large' },
-  { name:'BOOTY',              how:'Redeem the secret BOOTY code', type:'code', bonus:true, color:'#bd7bff' }
+  { name:'BOOTY',              how:'Redeem the secret BOOTY code', type:'code', bonus:true, color:'#bd7bff' },
+  { name:'JACK',               how:'Redeem the secret JACK code', type:'code', bonus:true, color:'#d8d2ba' }
 ];
 
 const CODES = [
@@ -78,7 +79,8 @@ const CODES = [
   { code:'DAVETEST',  reward:'Golden Beta Skiff + BETA TESTER title', active:true, hidden:true, boats:['davetest'], titles:['BETA TESTER'], badges:['daveTest'] },
   { code:'DAVEVR',    reward:'Creator yacht + CREATOR title', active:true, hidden:true, boats:['creator'], titles:['CREATOR'], badges:['creator'], equipTitle:'CREATOR', avatar:{gender:'male',skin:'fair',hair:'long',hairColor:'blonde',outfit:'gold',special:'creator'} },
   { code:'BOOTY',     reward:'Purple treasure boat + BOOTY title', active:true, hidden:true, boats:['booty'], titles:['BOOTY'], badges:['booty'], equipTitle:'BOOTY' },
-  { code:'RICH',      reward:'1,000,000 credits', active:true, hidden:true, coins:1000000 }
+  { code:'RICH',      reward:'1,000,000 credits', active:true, hidden:true, coins:1000000 },
+  { code:'JACK',      reward:'Blackwake Corsair + JACK title', active:true, hidden:true, boats:['jack'], titles:['JACK'], badges:['jack'], equipTitle:'JACK', avatar:{gender:'male',skin:'warm',hair:'long',hairColor:'brown',outfit:'navy',special:'jack'} }
 ];
 
 /* Autopets — auto-sell your catches (toggle in Menu) */
