@@ -1708,6 +1708,11 @@ function drawIslands(){
   ctx.restore();
 }
 
+function leviRoundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
 function drawBabyLeviathan(s, health){
   const t=G.frame*0.028;
   const x=s.x+Math.sin(t*.73)*s.r*.42;
@@ -1744,11 +1749,11 @@ function drawBabyLeviathan(s, health){
   ctx.restore();
 
   const w=156,h=10,barY=y-68,ratio=health.hp/health.maxHp;
-  ctx.fillStyle='rgba(3,9,22,.9)'; roundRect(x-w/2-4,barY-21,w+8,29,7); ctx.fill();
+  ctx.fillStyle='rgba(3,9,22,.9)'; leviRoundRect(x-w/2-4,barY-21,w+8,29,7); ctx.fill();
   ctx.font='900 10px system-ui,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.fillStyle='#ffe8a8'; ctx.fillText('BABY LEVIATHAN  '+health.hp+'/'+health.maxHp+' · '+Math.max(1,health.hunters||1)+' HUNTER'+((health.hunters||1)===1?'':'S'),x,barY-10);
-  ctx.fillStyle='rgba(255,255,255,.16)'; roundRect(x-w/2,barY,w,h,5); ctx.fill();
-  if(ratio>0){ ctx.fillStyle=ratio>.4?'#ff6b70':'#ff334f'; roundRect(x-w/2,barY,Math.max(5,w*ratio),h,5); ctx.fill(); }
+  ctx.fillStyle='rgba(255,255,255,.16)'; leviRoundRect(x-w/2,barY,w,h,5); ctx.fill();
+  if(ratio>0){ ctx.fillStyle=ratio>.4?'#ff6b70':'#ff334f'; leviRoundRect(x-w/2,barY,Math.max(5,w*ratio),h,5); ctx.fill(); }
 }
 
 function updateAltarBtn(){
