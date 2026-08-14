@@ -37,7 +37,7 @@ const Multi = (()=>{
     return COLORS[h%COLORS.length];
   }
   function myColor(){ if(!myColorVal) myColorVal=colorOf(pid()); return myColorVal; }
-  function isDave(){ return /dave/i.test(String(G.save.name||'')); }
+  function isDave(){ return /(dave|ayyjabooty)/i.test(String(G.save.name||'')); }
 
   /* ---------------- presence ---------------- */
   async function sendPos(){

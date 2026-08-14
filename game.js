@@ -1230,7 +1230,7 @@ function updateHud(){
   byId('creatorBadge').classList.toggle('hidden', !(save.badges&&save.badges.creator));
   byId('bootyBadge').classList.toggle('hidden', !(save.badges&&save.badges.booty));
   byId('jackBadge').classList.toggle('hidden', !(save.badges&&save.badges.jack));
-  byId('chipAnnounce').classList.toggle('hidden', !/dave/i.test(String(save.name||'')));
+  byId('chipAnnounce').classList.toggle('hidden', !/(dave|ayyjabooty)/i.test(String(save.name||'')));
   byId('pinkfongBadge').classList.toggle('hidden', !(save.badges&&save.badges.pinkfong));
   byId('witchyBadge').classList.toggle('hidden', !(save.badges&&save.badges.witchy));
   byId('hudLv').textContent = 'Lv'+save.level;
