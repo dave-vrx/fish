@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="format-detection" content="telephone=no">
 <meta name="theme-color" content="#06223a">
-<meta name="description" content="FISH! — sail the archipelago, catch the full fish index, complete quests, redeem codes and climb the global leaderboard. Made by Dave-VR.">
+<meta name="description" content="ANGLER! — sail the archipelago, catch the full fish index, complete quests, redeem codes and climb the global leaderboard. Made by Dave-VR.">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="FISH!">
-<title>FISH! 🎣 | Sail · Catch · Collect</title>
+<meta name="apple-mobile-web-app-title" content="ANGLER!">
+<title>ANGLER! 🎣 | Sail · Catch · Collect</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎣</text></svg>">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -21,7 +21,7 @@
 
 <!-- ===== HUD ===== -->
 <header id="hud">
-  <div class="logo" onclick="UI.openHelp()">🎣 <span>FISH</span><em>archipelago</em></div>
+  <div class="logo" onclick="UI.openHelp()">🎣 <span>ANGLER</span><em>archipelago</em></div>
   <div class="hud-chips">
     <button class="chip" id="chipName" onclick="UI.openName()">
       <span id="hudName">ANGLE'R</span><span class="beta-badge hidden" id="betaBadge" title="Beta Tester">✦</span><span class="davetest-badge hidden" id="davetestBadge" title="DAVETEST">♥</span><span class="creator-badge hidden" id="creatorBadge" title="CREATOR">✧</span><span class="booty-badge hidden" id="bootyBadge" title="BOOTY">◆</span><span class="pinkfong-badge hidden" id="pinkfongBadge" title="PINKFONG!">★</span><span class="witchy-badge hidden" id="witchyBadge" title="WITCHY">☾</span><span class="lv-pill" id="hudLv">Lv1</span>
@@ -140,7 +140,7 @@
   <div class="login-waves"><i></i><i></i><i></i></div>
   <div class="modal modal-welcome">
     <div class="avatar-circle" id="avatarCircle">🪝</div>
-    <h1 class="login-title">FISH<span>!</span></h1>
+    <h1 class="login-title">ANGLER<span>!</span></h1>
     <p class="modal-sub">Sail the archipelago, fill the fish index and climb the leaderboard.<br>Pick a fisher name to set sail.</p>
     <div class="name-field">
       <input id="nameInput" maxlength="16" placeholder="Your fisher name" autocomplete="off" oninput="document.getElementById('nameLen').textContent=this.value.length+'/16';UI.previewAvatar(this.value)">
