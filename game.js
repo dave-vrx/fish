@@ -1298,7 +1298,8 @@ const THEME = {
   twilight:{ water:'#3b2f6e', sand:'#5c4a8f', land:'#4a3a78', dark:'#2f2452', decor:'#c58cff', halo:'#7a6fd0' },
   rock:{ water:'#1f7fc2', sand:'#8f8f8f', land:'#6a6a6a', dark:'#4a4a4a', decor:'#b8f2ff', halo:'#79c8ea' }
 };
-const WORLD_Y_SCALE=0.56, CAMERA_YAW=-0.42;
+/* A taller isometric projection keeps the world readable while giving islands more volume. */
+const WORLD_Y_SCALE=0.64, CAMERA_YAW=-0.42;
 function applyWorldTransform(c){
   const z=G.cam.zoom;
   c.translate(W/2,H/2);
@@ -1331,6 +1332,14 @@ function drawOcean(){
   g.addColorStop(1,'#041f3b');
   ctx.fillStyle = g;
   ctx.fillRect(0,0,W,H);
+  /* Long soft wave ribbons make the sea read as a moving surface, not a flat backdrop. */
+  ctx.save(); ctx.globalAlpha=.16;
+  for(let i=0;i<7;i++){
+    const yy=H*.14+i*H*.15+Math.sin(G.frame*.015+i)*13;
+    const rg=ctx.createLinearGradient(0,yy,W,yy+20); rg.addColorStop(0,'rgba(255,255,255,0)'); rg.addColorStop(.45,'rgba(157,225,255,.55)'); rg.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.strokeStyle=rg; ctx.lineWidth=10; ctx.beginPath(); ctx.moveTo(-50,yy); ctx.bezierCurveTo(W*.25,yy-18,W*.68,yy+20,W+50,yy-4); ctx.stroke();
+  }
+  ctx.restore();
   /* A large, moving specular reflection sits above the world plane. */
   const sunX=W*(.22+.06*Math.sin(G.frame*.003)), sunY=H*.08;
   const sheen=ctx.createRadialGradient(sunX,sunY,0,sunX,sunY,Math.max(W,H)*.72);
@@ -1807,7 +1816,7 @@ function drawIslands(){
     ctx.fillStyle = halo;
     ctx.beginPath(); ctx.arc(isl.x, isl.y, r*1.8, 0, Math.PI*2); ctx.fill();
     /* Island top plus its camera-facing vertical cliff faces. */
-    const shoreScale=.72, cliffHeight=92;
+    const shoreScale=.72, cliffHeight=124;
     const dropX=Math.sin(CAMERA_YAW)*cliffHeight/WORLD_Y_SCALE, dropY=Math.cos(CAMERA_YAW)*cliffHeight/WORLD_Y_SCALE;
     islPolyPath(isl.x+dropX,isl.y+dropY,pts,shoreScale);
     ctx.fillStyle='rgba(0,19,31,.32)'; ctx.fill();
@@ -1824,7 +1833,7 @@ function drawIslands(){
     islPolyPath(isl.x, isl.y, pts, shoreScale-.015);
     ctx.stroke();
     /* The grass/rock interior is a second, smaller raised terrace above the beach. */
-    drawIslandCliffs(isl,pts,.49,27,th.dark);
+    drawIslandCliffs(isl,pts,.49,38,th.dark);
     /* land */
     islPolyPath(isl.x, isl.y, pts, 0.49);
     const lg = ctx.createLinearGradient(0, isl.y - r*0.5, 0, isl.y + r*0.6);
@@ -1840,6 +1849,13 @@ function drawIslands(){
     for(let g=0;g<7;g++){
       const gx=isl.x+Math.sin(g*19+i*7)*r*.27, gy=isl.y+Math.cos(g*13+i*5)*r*.22;
       ctx.beginPath(); ctx.ellipse(gx,gy,r*.13,r*.045,-.25,0,Math.PI*2); ctx.fill();
+    }
+    /* Tiny grass/stone clusters add a low-poly terrain texture at every zoom level. */
+    const terrain=mulberry(i*1237+97);
+    for(let g=0;g<18;g++){
+      const a=terrain()*Math.PI*2, rr=r*(.05+terrain()*.40), gx=isl.x+Math.cos(a)*rr, gy=isl.y+Math.sin(a)*rr;
+      if(g%3===0){ ctx.fillStyle='rgba(255,255,230,.18)'; ctx.beginPath(); ctx.ellipse(gx,gy,2+terrain()*2,1+terrain(),-.35,0,Math.PI*2); ctx.fill(); }
+      else { ctx.strokeStyle='rgba(18,68,33,.33)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(gx,gy+3); ctx.lineTo(gx-1,gy-2); ctx.moveTo(gx,gy+3); ctx.lineTo(gx+2,gy-1); ctx.stroke(); }
     }
     ctx.lineWidth = 2;
     ctx.strokeStyle = 'rgba(0,0,0,.25)';
@@ -2260,6 +2276,15 @@ function drawOverlays(){
   if(G.state.weather === 'Stormy' && Math.random() < 0.004){
     ctx.fillStyle = 'rgba(255,255,255,0.5)';
     ctx.fillRect(0,0,W,H);
+  }
+  if(G.state.time === 'Evening'){
+    ctx.fillStyle = 'rgba(128,58,25,.09)'; ctx.fillRect(0,0,W,H);
+  }
+  if(G.state.weather === 'Clear' || G.state.time === 'Morning'){
+    const lx=W*.18+Math.sin(G.frame*.002)*W*.05, ly=H*.08;
+    const light=ctx.createRadialGradient(lx,ly,0,lx,ly,Math.max(W,H)*.82);
+    light.addColorStop(0,'rgba(255,239,184,.15)'); light.addColorStop(.55,'rgba(255,240,190,.035)'); light.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=light; ctx.fillRect(0,0,W,H);
   }
   if(G.state.time === 'Night'){
     ctx.fillStyle = 'rgba(8,14,40,0.32)';
