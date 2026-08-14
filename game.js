@@ -83,7 +83,7 @@ const G = {
   joy: { x:0, y:0 },
   fish: { state:'idle', pool:null, t:0, biteAt:0, game:null, catch:null },
   effects: [], sparkles: [],
-  lockWarnings: {},
+  blockedIsland: null,
   saveTimer: 0, hudTimer: 0, mmTimer: 0, leviSyncTimer: 0, pinkTrailTimer: 0, weatherDur: 0,
   frame: 0
 };
@@ -1038,20 +1038,19 @@ function updateBoat(dt){
   for(const isl of ISLANDS){
     const d = Math.hypot(b.x-isl.x, b.y-isl.y);
     const minD = isl.r * 0.55;
-    if(d > minD * 1.35) G.lockWarnings[isl.id] = false;
     if(d < minD){
       if(isl.unlock === 'volcanic' && save.level < 50){
         pushOut(isl, d, minD);
-        if(!G.lockWarnings[isl.id]){
-          G.lockWarnings[isl.id] = true;
+        if(G.blockedIsland !== isl.id){
+          G.blockedIsland = isl.id;
           toast('🔥 Reach Level 50 to enter the Volcanic Depths!', 'bad');
         }
         continue;
       }
       if(isl.unlock === 'twilight' && !save.quests.done.breakin){
         pushOut(isl, d, minD);
-        if(!G.lockWarnings[isl.id]){
-          G.lockWarnings[isl.id] = true;
+        if(G.blockedIsland !== isl.id){
+          G.blockedIsland = isl.id;
           toast('🔒 Unlock the Twilight Realm by completing "The Break-in"!', 'bad');
         }
         continue;
@@ -1060,6 +1059,10 @@ function updateBoat(dt){
       pushOut(isl, d, minD);
       b.speed *= Math.max(0.55, 1 - (1/boatT)*dt*3);
     }
+  }
+  if(G.blockedIsland){
+    const blocked=islandById(G.blockedIsland);
+    if(!blocked || Math.hypot(b.x-blocked.x,b.y-blocked.y)>blocked.r*.9) G.blockedIsland=null;
   }
   function pushOut(isl, d, minD){
     if(d === 0) d = 1;
