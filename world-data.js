@@ -62,7 +62,8 @@ const TITLES = [
   { name:'BETA TESTER',        how:'Redeem the secret SKULL code', type:'code', bonus:true, color:'#ffd166' },
   { name:'PINKFONG!',          how:'Redeem the secret PINKFONG code', type:'code', bonus:true, color:'#ff65b7' },
   { name:'WITCHY',             how:'Redeem the secret WITCHY code', type:'code', bonus:true, color:'#d9bd70' },
-  { name:'CREATOR',            how:'Redeem the secret DAVEVR code', type:'code', bonus:true, color:'#ffffff', size:'large' }
+  { name:'CREATOR',            how:'Redeem the secret DAVEVR code', type:'code', bonus:true, color:'#ffffff', size:'large' },
+  { name:'BOOTY',              how:'Redeem the secret BOOTY code', type:'code', bonus:true, color:'#bd7bff' }
 ];
 
 const CODES = [
@@ -75,7 +76,8 @@ const CODES = [
   { code:'PINKFONG',  reward:'Pinkfong boat + PINKFONG! title', active:true, hidden:true, boats:['pinkfong'], titles:['PINKFONG!'], badges:['pinkfong'] },
   { code:'WITCHY',    reward:'Moonlit Sleep Token vessel + WITCHY title', active:true, hidden:true, boats:['witchy'], titles:['WITCHY'], badges:['witchy'], avatar:{gender:'female',skin:'fair',hair:'long',hairColor:'black',outfit:'violet',special:'witchy'} },
   { code:'DAVETEST',  reward:'Golden Beta Skiff + BETA TESTER title', active:true, hidden:true, boats:['davetest'], titles:['BETA TESTER'], badges:['daveTest'] },
-  { code:'DAVEVR',    reward:'Creator yacht + CREATOR title', active:true, hidden:true, boats:['creator'], titles:['CREATOR'], badges:['creator'], equipTitle:'CREATOR', avatar:{gender:'male',skin:'fair',hair:'long',hairColor:'blonde',outfit:'gold',special:'creator'} }
+  { code:'DAVEVR',    reward:'Creator yacht + CREATOR title', active:true, hidden:true, boats:['creator'], titles:['CREATOR'], badges:['creator'], equipTitle:'CREATOR', avatar:{gender:'male',skin:'fair',hair:'long',hairColor:'blonde',outfit:'gold',special:'creator'} },
+  { code:'BOOTY',     reward:'Purple treasure boat + BOOTY title', active:true, hidden:true, boats:['booty'], titles:['BOOTY'], badges:['booty'], equipTitle:'BOOTY' }
 ];
 
 /* Autopets — auto-sell your catches (toggle in Menu) */

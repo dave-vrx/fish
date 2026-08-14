@@ -64,7 +64,8 @@ const BOATS = [
   { id:'pinkfong',   name:'Pinkfong Cruiser', emoji:'🦊', cost:0,        tier:5, seats:4,  speed:4, accel:4, tough:2.5,boost:5, src:'Secret code: PINKFONG', unlock:'code_pinkfong' },
   { id:'witchy',     name:'Moonlit Vessel',   emoji:'☾', cost:0,        tier:5, seats:4,  speed:4, accel:4, tough:2.5,boost:5, src:'Secret code: WITCHY', unlock:'code_witchy' },
   { id:'davetest',   name:'Golden Beta Skiff', emoji:'💛', cost:0,       tier:5, seats:4,  speed:4, accel:4, tough:2.5,boost:5, src:'Secret code: DAVETEST', unlock:'code_davetest' },
-  { id:'creator',    name:'DAVEVR Creator Yacht', emoji:'🤍', cost:0,    tier:5, seats:8,  speed:4, accel:4, tough:3, boost:5, src:'Secret code: DAVEVR', unlock:'code_creator' }
+  { id:'creator',    name:'DAVEVR Creator Yacht', emoji:'🤍', cost:0,    tier:5, seats:8,  speed:4, accel:4, tough:3, boost:5, src:'Secret code: DAVEVR', unlock:'code_creator' },
+  { id:'booty',      name:'Purple Plunder',       emoji:'💜', cost:0,    tier:5, seats:6,  speed:4, accel:4, tough:2.5,boost:5, src:'Secret code: BOOTY', unlock:'code_booty' }
 ];
 
 /* Enchantments (name, rarity, special, luck, str, exp, att, big, maxW, xp%) */

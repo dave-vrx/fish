@@ -1223,6 +1223,7 @@ function updateHud(){
   byId('betaBadge').classList.toggle('hidden', !(save.badges&&save.badges.betaTester));
   byId('davetestBadge').classList.toggle('hidden', !(save.badges&&save.badges.daveTest));
   byId('creatorBadge').classList.toggle('hidden', !(save.badges&&save.badges.creator));
+  byId('bootyBadge').classList.toggle('hidden', !(save.badges&&save.badges.booty));
   byId('pinkfongBadge').classList.toggle('hidden', !(save.badges&&save.badges.pinkfong));
   byId('witchyBadge').classList.toggle('hidden', !(save.badges&&save.badges.witchy));
   byId('hudLv').textContent = 'Lv'+save.level;
@@ -2115,6 +2116,13 @@ function drawBoatSprite(c, id, scale){
       c.strokeStyle='#d4a927'; c.lineWidth=1.5; c.beginPath(); c.moveTo(-14,2); c.lineTo(17,2); c.stroke();
       c.fillStyle='#284158'; c.font='900 4.8px system-ui,sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.fillText('DAVEVR',2,5);
       c.fillStyle='#fff'; c.beginPath(); c.arc(2,-7,2.3,0,Math.PI*2); c.fill();
+      break;
+    case 'booty':
+      c.fillStyle='#3b176a'; c.beginPath(); c.moveTo(21,0); c.quadraticCurveTo(7,-12,-17,0); c.quadraticCurveTo(6,12,21,0); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle='#7f39bd'; c.beginPath(); c.moveTo(17,-1); c.quadraticCurveTo(6,-8,-13,0); c.quadraticCurveTo(5,7,17,-1); c.closePath(); c.fill();
+      c.strokeStyle='#e4bdff'; c.lineWidth=1.4; c.beginPath(); c.moveTo(-11,2); c.lineTo(15,2); c.stroke();
+      c.fillStyle='#2a104d'; c.fillRect(-2,-14,2,12); c.fillStyle='#bd7bff'; c.beginPath(); c.moveTo(0,-14); c.lineTo(10,-10); c.lineTo(0,-5); c.closePath(); c.fill();
+      c.fillStyle='#ffd166'; c.beginPath(); c.arc(-7,-2,2.4,0,Math.PI*2); c.fill(); c.fillStyle='#fff1a6'; c.beginPath(); c.arc(-8,-3,0.8,0,Math.PI*2); c.fill();
       break;
     default:
       c.fillStyle = '#fff';
