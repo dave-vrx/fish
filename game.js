@@ -1116,15 +1116,19 @@ function toggleLand(){
 }
 function updatePlayer(dt){
   const p=G.player;
-  let sx=G.input.x, sy=-G.input.y;
-  if(G.input.joyAng!=null){ sx=Math.sin(G.input.joyAng)*G.input.joyMag; sy=-Math.cos(G.input.joyAng)*G.input.joyMag; }
-  /* Convert screen-relative walking input through the tilted camera. */
-  const c=Math.cos(CAMERA_YAW), s=Math.sin(CAMERA_YAW);
-  let dx=c*sx+s*sy, dy=-s*sx+c*sy;
-  const mag=Math.hypot(dx,dy);
-  if(mag>0.02){
-    dx/=Math.max(1,mag); dy/=Math.max(1,mag); p.head=Math.atan2(dy,dx);
-    p.x+=dx*150*dt; p.y+=dy*150*dt;
+  let fwd=G.input.y, turn=G.input.x;
+  if(G.input.joyAng!=null && G.input.joyMag>.02){
+    let diff=G.input.joyAng-p.head;
+    while(diff>Math.PI) diff-=Math.PI*2;
+    while(diff<-Math.PI) diff+=Math.PI*2;
+    p.head+=Math.max(-1,Math.min(1,diff*1.8))*3.2*dt;
+    fwd=G.input.joyMag;
+    turn=0;
+  }
+  if(turn) p.head+=turn*3.2*dt;
+  if(Math.abs(fwd)>.02){
+    p.x+=Math.sin(p.head)*fwd*150*dt;
+    p.y-=Math.cos(p.head)*fwd*150*dt;
   }
   const isl=islandById(p.island);
   if(isl){
@@ -2027,7 +2031,7 @@ function updateLandAvatar(){
   const el=byId('landAvatar');
   if(!G.player.onFoot){ el.classList.add('hidden'); return; }
   const p=worldToScreen(G.player.x,G.player.y);
-  el.style.left=p.x+'px'; el.style.top=(p.y+18)+'px'; el.classList.remove('hidden');
+  el.style.left=p.x+'px'; el.style.top=(p.y+5)+'px'; el.classList.remove('hidden');
   byId('landName').textContent=(save.name||'Angler')+' · Lv'+save.level;
   const title=activeTitle()||'';
   const meta=TITLES.find(t=>t.name===title);

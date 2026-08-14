@@ -87,9 +87,9 @@ input{font-family:inherit}
   padding:5px 14px;font-size:13px;font-weight:800;backdrop-filter:blur(3px);
 }
 #landAvatar{position:fixed;left:0;top:0;z-index:7;pointer-events:none;transform:translate(-50%,-100%);text-align:center;filter:drop-shadow(0 4px 3px rgba(0,0,0,.35))}
-.land-walker{font-size:38px;line-height:.9;text-shadow:0 5px 3px rgba(0,0,0,.3)}
+.land-walker{font-size:34px;line-height:.82;text-shadow:0 5px 3px rgba(0,0,0,.3)}
 .land-name{display:inline-block;padding:3px 8px;border-radius:999px;background:rgba(6,20,34,.9);border:1px solid #7fe7ff;color:#eaf6ff;font-size:11px;font-weight:900;white-space:nowrap}
-.land-title{min-height:13px;margin-bottom:2px;color:#ffd166;font-size:9px;font-weight:900;text-shadow:0 1px 3px #000;white-space:nowrap}
+.land-title{min-height:11px;margin-bottom:0;color:#ffd166;font-size:9px;font-weight:900;text-shadow:0 1px 3px #000;white-space:nowrap}
 #locTag span#locPool{font-size:11px;color:var(--dim);margin-top:4px;font-weight:600}
 
 /* ============ CONTROLS ============ */
