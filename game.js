@@ -71,6 +71,7 @@ function resetSave(){
   save = freshSave();
   G.state.weather = 'Clear'; G.state.time = 'Day';
   G.boat.x = 650; G.boat.y = 700; G.boat.head = -Math.PI/2;
+  G.player.onFoot=false; G.player.x=650; G.player.y=700; G.player.island=null;
 }
 
 /* ---------------- state ---------------- */
@@ -79,6 +80,7 @@ const G = {
   state: { weather:'Clear', time:'Day', weatherT:0, timeT:0, levi:null, running:false },
   cam: { x:650, y:700, zoom:0.7 },
   boat: { x:650, y:700, head:-Math.PI/2, speed:0, boost:0, boostCd:0 },
+  player: { onFoot:false, x:650, y:700, head:0, island:null },
   input: { x:0, y:0, boost:false, hold:false, joyAng:null, joyMag:0 },
   joy: { x:0, y:0 },
   fish: { state:'idle', pool:null, t:0, biteAt:0, game:null, catch:null },
@@ -188,7 +190,7 @@ function leviHunterCount(){
 
 /* ---------------- location ---------------- */
 function detectLoc(){
-  const b = G.boat;
+  const b = G.player.onFoot ? G.player : G.boat;
   for(const isl of ISLANDS){
     const d = Math.hypot(b.x-isl.x, b.y-isl.y);
     if(d < isl.r*0.85) return { name:isl.name, island:isl };
@@ -367,6 +369,7 @@ function biteDelay(){
 
 function cast(){
   if(G.fish.state !== 'idle') return;
+  if(G.player.onFoot){ toast('🚤 Board your boat before casting.','bad'); return; }
   const loc = detectLoc();
   const pool = buildPool(loc);
   if(!pool.list.length){
@@ -992,6 +995,7 @@ function readKeyboardInput(){
 
 /* ---------------- boat physics ---------------- */
 function updateBoat(dt){
+  if(G.player.onFoot){ updatePlayer(dt); return; }
   const b = G.boat;
   const boat = gearById(BOATS, save.boat);
   const fishingNow = G.fish.state !== 'idle';
@@ -1086,6 +1090,43 @@ function updateBoat(dt){
   for(let i = G.effects.length-1; i >= 0; i--){
     G.effects[i].t += dt;
     if(G.effects[i].t > 1.4) G.effects.splice(i,1);
+  }
+}
+
+function landableIsland(){
+  for(const isl of ISLANDS){
+    if(Math.hypot(G.boat.x-isl.x,G.boat.y-isl.y)<isl.r*.85) return isl;
+  }
+  return null;
+}
+function toggleLand(){
+  if(G.fish.state !== 'idle'){ toast('Finish fishing before leaving the boat.','bad'); return; }
+  const p=G.player, b=G.boat;
+  if(p.onFoot){
+    if(Math.hypot(p.x-b.x,p.y-b.y)>105){ toast('🚤 Walk back to your boat to board it.','bad'); return; }
+    p.onFoot=false; p.island=null; b.speed=0;
+    toast('🚤 Back aboard!','good');
+    return;
+  }
+  const isl=landableIsland();
+  if(!isl){ toast('Sail close to an island shore first.','bad'); return; }
+  const dx=b.x-isl.x, dy=b.y-isl.y, d=Math.max(1,Math.hypot(dx,dy));
+  p.onFoot=true; p.island=isl.id; p.x=isl.x+dx/d*isl.r*.43; p.y=isl.y+dy/d*isl.r*.43; p.head=b.head; b.speed=0;
+  toast('🧍 You stepped ashore. Explore the island!','good');
+}
+function updatePlayer(dt){
+  const p=G.player;
+  let dx=G.input.x, dy=-G.input.y;
+  if(G.input.joyAng!=null){ dx=Math.sin(G.input.joyAng)*G.input.joyMag; dy=-Math.cos(G.input.joyAng)*G.input.joyMag; }
+  const mag=Math.hypot(dx,dy);
+  if(mag>0.02){
+    dx/=Math.max(1,mag); dy/=Math.max(1,mag); p.head=Math.atan2(dy,dx);
+    p.x+=dx*118*dt; p.y+=dy*118*dt;
+  }
+  const isl=islandById(p.island);
+  if(isl){
+    const ox=p.x-isl.x, oy=p.y-isl.y, d=Math.hypot(ox,oy), limit=isl.r*.46;
+    if(d>limit){ p.x=isl.x+ox/d*limit; p.y=isl.y+oy/d*limit; }
   }
 }
 
@@ -1239,6 +1280,13 @@ function drawOcean(){
       ctx.fillRect(x + wob, yy, 24, 2);
       ctx.fillRect(x + 40 - wob, yy + 26, 16, 1.5);
     }
+  }
+  /* broad, slow-moving caustics give the water a layered depth rather than a flat grid */
+  for(let i=0;i<18;i++){
+    const x=vx+((i*173+G.frame*0.8)%vw), y=vy+((i*97+G.frame*.32)%vh);
+    const glow=ctx.createRadialGradient(x,y,0,x,y,58);
+    glow.addColorStop(0,'rgba(115,220,255,.09)'); glow.addColorStop(1,'rgba(115,220,255,0)');
+    ctx.fillStyle=glow; ctx.beginPath(); ctx.ellipse(x,y,58,18,Math.sin(i+G.frame*.01)*.25,0,Math.PI*2); ctx.fill();
   }
   G.sparkles.forEach(s => {
     ctx.globalAlpha = s.a;
@@ -1635,6 +1683,11 @@ function drawIslands(){
     halo.addColorStop(1, 'rgba(90,190,235,0)');
     ctx.fillStyle = halo;
     ctx.beginPath(); ctx.arc(isl.x, isl.y, r*1.8, 0, Math.PI*2); ctx.fill();
+    /* elevated shoreline: stacked lower slices make each island sit above the sea */
+    for(let depth=14;depth>=3;depth-=3){
+      islPolyPath(isl.x, isl.y+depth, pts, 0.62);
+      ctx.fillStyle='rgba(2,24,36,'+(0.10+depth*.008)+')'; ctx.fill();
+    }
     /* sand beach */
     islPolyPath(isl.x, isl.y, pts, 0.62);
     ctx.fillStyle = th.sand;
@@ -1649,6 +1702,11 @@ function drawIslands(){
     lg.addColorStop(0, th.land); lg.addColorStop(1, th.dark);
     ctx.fillStyle = lg;
     ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.055)';
+    for(let g=0;g<7;g++){
+      const gx=isl.x+Math.sin(g*19+i*7)*r*.27, gy=isl.y+Math.cos(g*13+i*5)*r*.22;
+      ctx.beginPath(); ctx.ellipse(gx,gy,r*.13,r*.045,-.25,0,Math.PI*2); ctx.fill();
+    }
     ctx.lineWidth = 2;
     ctx.strokeStyle = 'rgba(0,0,0,.25)';
     islPolyPath(isl.x, isl.y, pts, 0.40);
@@ -1785,9 +1843,21 @@ function drawBabyLeviathan(s, health){
 
 function updateAltarBtn(){
   const alt = islandById('altar');
-  const nearAltar = alt && Math.hypot(G.boat.x-alt.x, G.boat.y-alt.y) < alt.r*1.4;
+  const actor=G.player.onFoot?G.player:G.boat;
+  const nearAltar = alt && Math.hypot(actor.x-alt.x, actor.y-alt.y) < alt.r*1.4;
   const altBtn = byId('btnAltar');
   if(altBtn) altBtn.classList.toggle('hidden', !nearAltar);
+}
+function updateLandButton(){
+  const btn=byId('btnLand'); if(!btn) return;
+  if(G.player.onFoot){
+    btn.classList.remove('hidden'); btn.classList.add('board');
+    btn.innerHTML='🚤 <span>BOARD BOAT</span>';
+  }else{
+    const isl=landableIsland();
+    btn.classList.toggle('hidden', !isl);
+    btn.classList.remove('board'); btn.innerHTML='🧍 <span>GET OUT</span>';
+  }
 }
 
 function drawBoatSprite(c, id, scale){
@@ -1936,6 +2006,16 @@ function drawBoat(){
   ctx.fillStyle = 'rgba(0,10,20,.18)';
   ctx.beginPath(); ctx.ellipse(2, 3, 16, 10, 0, 0, Math.PI*2); ctx.fill();
   drawBoatSprite(ctx, save.boat, 1);
+  if(G.player.onFoot){
+    const p=G.player;
+    ctx.save(); ctx.translate(p.x-b.x,p.y-b.y);
+    ctx.fillStyle='rgba(0,10,20,.28)'; ctx.beginPath(); ctx.ellipse(0,7,6,2.6,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#f0c8a0'; ctx.beginPath(); ctx.arc(0,-6,4,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#ffd166'; ctx.fillRect(-4,-2,8,10);
+    ctx.fillStyle='#163754'; ctx.fillRect(-4,7,3,5); ctx.fillRect(1,7,3,5);
+    ctx.fillStyle='#0d2134'; ctx.beginPath(); ctx.arc(-1.4,-6.5,.75,0,Math.PI*2); ctx.arc(1.4,-6.5,.75,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
   ctx.restore();
 }
 
@@ -2057,8 +2137,10 @@ function loop(t){
     if(leviStatus().active && window.Net) Net.refreshLeviathan(leviHunterCount());
   }
   updateAltarBtn();
-  G.cam.x += (G.boat.x - G.cam.x) * Math.min(1, delta*5);
-  G.cam.y += (G.boat.y - G.cam.y) * Math.min(1, delta*5);
+  updateLandButton();
+  const focus=G.player.onFoot?G.player:G.boat;
+  G.cam.x += (focus.x - G.cam.x) * Math.min(1, delta*5);
+  G.cam.y += (focus.y - G.cam.y) * Math.min(1, delta*5);
   G.cam.zoom = Math.max(0.5, Math.min(1.5, W/780));
 
   if(Math.random() < delta*3 && G.sparkles.length < 90){
@@ -2092,7 +2174,7 @@ const Game = {
   buyGear, equipGear, buyBoat, equipBoat, boatRoulette, doEnchant, redeemCode,
   claimQuest, claimBounty, genBounties, updateBounties, questUnlocked, activeQuests, questProg,
   grantTitle, checkTitle, checkIndexCompletion, addXp, xpNeed, addItem,
-  itemCanShow, leviStatus, leviHealth, leviHunterCount, relicToKey, locName, effLuck, effAtt, fishValue,
+  itemCanShow, leviStatus, leviHealth, leviHunterCount, relicToKey, locName, effLuck, effAtt, fishValue, toggleLand,
   updateHud, resetSave, questMap: ()=>QUESTS,
   titles: ()=>TITLES, codes: ()=>CODES, poolMods: POOL_MODS,
   indexCount: ()=>Object.keys(save.index).length,
