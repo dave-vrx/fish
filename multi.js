@@ -239,14 +239,38 @@ const Multi = (()=>{
     ctx.save();
     ctx.textAlign='center'; ctx.textBaseline='middle';
     if(chat){
-      const cw=Math.min(210, chat.length*6.2+18), ch=18;
+      const maxW=200;
+      ctx.font='600 11px system-ui,sans-serif';
+      const words=String(chat).split(/\s+/);
+      const lines=[]; let line='';
+      const breakWord=w=>{
+        if(ctx.measureText(w).width<=maxW) return [w];
+        const out=[]; let cur='';
+        for(const ch2 of w){
+          if(cur && ctx.measureText(cur+ch2).width>maxW){ out.push(cur); cur=ch2; }
+          else cur+=ch2;
+        }
+        if(cur) out.push(cur);
+        return out;
+      };
+      words.forEach(w=>{
+        breakWord(w).forEach((chunk,ci)=>{
+          const t=line?line+' '+chunk:chunk;
+          if(line && ctx.measureText(t).width>maxW){ lines.push(line); line=chunk; }
+          else line=t;
+        });
+      });
+      if(line) lines.push(line);
+      const lh=13;
+      const cw=Math.max(40, Math.min(210, Math.max(...lines.map(l=>ctx.measureText(l).width))+14));
+      const ch=lines.length*lh+9;
       const cx=sx, cy=sy-96;
       ctx.fillStyle='rgba(6,20,34,.85)';
       roundRect(cx-cw/2,cy-ch,cw,ch,9); ctx.fill();
       ctx.strokeStyle='rgba(255,255,255,.28)'; ctx.lineWidth=1; ctx.stroke();
       ctx.beginPath(); ctx.moveTo(cx-5,cy+ch-1); ctx.lineTo(cx+5,cy+ch-1); ctx.lineTo(cx,cy+ch+6); ctx.closePath(); ctx.fill();
-      ctx.fillStyle='#eaf6ff'; ctx.font='600 11px system-ui,sans-serif';
-      ctx.fillText(chat, cx, cy-ch/2+0.5);
+      ctx.fillStyle='#eaf6ff';
+      lines.forEach((l,i)=>ctx.fillText(l, cx, cy-ch/2+lh/2+i*lh));
     }
     const w=Math.max(34, String(name).length*6.5+18);
     const x=sx-w/2, y=sy-66;
