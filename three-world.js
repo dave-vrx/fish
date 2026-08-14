@@ -44,16 +44,16 @@ const World3D=(()=>{
   }
   function init(){
     if(ready||!window.THREE) return; const canvas=document.getElementById('world3d'); if(!canvas) return;
-    renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;
+    renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;
     scene=new THREE.Scene();scene.background=hex('#78c5e7');scene.fog=new THREE.FogExp2('#78c5e7',.00022);
-    camera=new THREE.PerspectiveCamera(47,1,.1,9000);
-    scene.add(new THREE.HemisphereLight('#b9eeff','#254332',2.1));sun=new THREE.DirectionalLight('#fff1c7',3.1);sun.position.set(-700,1100,-500);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
+    camera=new THREE.OrthographicCamera(-700,700,700,-700,.1,9000);
+    scene.add(new THREE.HemisphereLight('#b9eeff','#254332',2.1));sun=new THREE.DirectionalLight('#fff1c7',3.1);sun.position.set(-700,1100,-500);sun.castShadow=true;sun.shadow.mapSize.set(512,512);scene.add(sun);
     const waterMat=new THREE.ShaderMaterial({transparent:false,uniforms:{time:{value:0}},vertexShader:'uniform float time; varying vec3 vP; void main(){vec3 p=position; p.y=sin(p.x*.012+time*.7)*2.2+cos(p.z*.016+time*.5)*1.6; vP=p; gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.0);}',fragmentShader:'varying vec3 vP; void main(){float w=sin(vP.x*.035+vP.z*.025)*.5+.5; vec3 deep=vec3(.018,.16,.27); vec3 shallow=vec3(.045,.39,.57); gl_FragColor=vec4(mix(deep,shallow,w),1.0);}' });
-    water=new THREE.Mesh(new THREE.PlaneGeometry(7200,7200,72,72),waterMat);water.rotation.x=-Math.PI/2;water.receiveShadow=true;scene.add(water);
+    water=new THREE.Mesh(new THREE.PlaneGeometry(7200,7200,36,36),waterMat);water.rotation.x=-Math.PI/2;water.receiveShadow=true;scene.add(water);
     ISLANDS.forEach(island);makeBoat();makeWalker();ready=true;resize();requestAnimationFrame(render);
   }
-  function resize(){if(!ready)return;const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
-  function render(t){requestAnimationFrame(render);if(!ready)return;water.material.uniforms.time.value=t*.001;const actor=G.player&&G.player.onFoot?G.player:G.boat;if(actor){const tx=actor.x,tz=actor.y;camera.position.lerp(new THREE.Vector3(tx+560,720,tz+670),.08);camera.lookAt(tx,35,tz);boat.position.set(G.boat.x,10,G.boat.y);boat.rotation.y=-G.boat.head;const s=G.boat.boost>0?1.08:1;boat.scale.lerp(new THREE.Vector3(s,s,s),.08);walker.visible=!!G.player.onFoot;if(walker.visible){walker.position.set(G.player.x,112,G.player.y);walker.rotation.y=-G.player.head;}}const night=G.state&&G.state.time==='Night';scene.fog.color.set(night?'#101632':'#78c5e7');sun.intensity=night?.35:3.1;renderer.render(scene,camera);}
+  function resize(){if(!ready)return;const w=innerWidth,h=innerHeight,aspect=w/h,span=700;renderer.setSize(w,h,false);camera.left=-span*aspect;camera.right=span*aspect;camera.top=span;camera.bottom=-span;camera.updateProjectionMatrix();}
+  function render(t){requestAnimationFrame(render);if(!ready)return;water.material.uniforms.time.value=t*.001;const actor=G.player&&G.player.onFoot?G.player:G.boat;if(actor){const tx=actor.x,tz=actor.y;camera.position.lerp(new THREE.Vector3(tx+510,680,tz+510),.10);camera.lookAt(tx,32,tz);boat.position.set(G.boat.x,10,G.boat.y);boat.rotation.y=-G.boat.head;const s=G.boat.boost>0?1.08:1;boat.scale.lerp(new THREE.Vector3(s,s,s),.08);walker.visible=!!G.player.onFoot;if(walker.visible){walker.position.set(G.player.x,112,G.player.y);walker.rotation.y=-G.player.head;}}const night=G.state&&G.state.time==='Night';scene.fog.color.set(night?'#101632':'#78c5e7');sun.intensity=night?.35:3.1;renderer.render(scene,camera);}
   window.addEventListener('resize',resize);setTimeout(init,0);return {get active(){return ready;},init};
 })();
 window.World3D=World3D;
