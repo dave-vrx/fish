@@ -11,6 +11,7 @@
 const Net = (()=>{
   const LB_URL='https://mantledb.sh/v2/fishvr/leaderboard';
   const BNT_URL='https://mantledb.sh/v2/fishvr/bounties';
+  const LEVI_URL='https://mantledb.sh/v2/fishvr/leviathan';
 
   let scores=[];
   let myId='';
@@ -174,7 +175,54 @@ const Net = (()=>{
     }catch(e){}
   }
 
+  /* Hourly Baby Leviathan hunt. MantleDB is a simple JSON store, so clients
+     continuously refresh the shared health and write their completed catch. */
+  function leviWindow(){
+    const now=new Date();
+    const start=new Date(now);
+    start.setUTCMinutes(0,0,0);
+    return { key:start.toISOString().slice(0,13), start, end:new Date(start.getTime()+600000), active:now-start<600000 };
+  }
+  function freshLevi(w){ return {hour:w.key,hp:100,maxHp:100,winner:null,at:Date.now()}; }
+  async function refreshLeviathan(){
+    const w=leviWindow();
+    if(!w.active){ G.state.levi=null; return null; }
+    try{
+      const r=await fetch(LEVI_URL,{cache:'no-store'});
+      const d=r.ok?await r.json():null;
+      G.state.levi=(d&&d.hour===w.key)?d:freshLevi(w);
+    }catch(e){
+      if(!G.state.levi||G.state.levi.hour!==w.key) G.state.levi=freshLevi(w);
+    }
+    return G.state.levi;
+  }
+  async function damageLeviathan(){
+    const w=leviWindow();
+    if(!w.active||!G.save.name) return {ok:false};
+    try{
+      const r=await fetch(LEVI_URL,{cache:'no-store'});
+      const d=r.ok?await r.json():null;
+      const event=(d&&d.hour===w.key)?d:freshLevi(w);
+      if(event.hp<=0){ G.state.levi=event; return {ok:false,finished:true}; }
+      event.hp=Math.max(0,(event.hp||100)-1);
+      let won=false;
+      if(event.hp===0){ event.winner={id:getMyId(),name:(G.save.name||'Angler').slice(0,16),at:Date.now()}; won=true; }
+      event.at=Date.now();
+      await fetch(LEVI_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(event)});
+      /* Confirm the winner after write, so an overlapping catch normally
+         settles on the final shared record rather than paying both clients. */
+      let settled=event;
+      try{
+        const check=await fetch(LEVI_URL,{cache:'no-store'});
+        if(check.ok) settled=await check.json();
+      }catch(e){}
+      G.state.levi=settled;
+      won=!!(won&&settled&&settled.hour===w.key&&settled.winner&&settled.winner.id===getMyId());
+      return {ok:true,won,event:settled};
+    }catch(e){ return {ok:false}; }
+  }
+
   return { init,refresh,submit,bump,throttledSubmit,onNameChange,render,removeMe,clearAll,getScores,
-    loadBounties,saveBounties };
+    loadBounties,saveBounties,refreshLeviathan,damageLeviathan };
 })();
 window.Net=Net;

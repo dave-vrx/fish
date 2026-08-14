@@ -82,7 +82,7 @@ const G = {
   joy: { x:0, y:0 },
   fish: { state:'idle', pool:null, t:0, biteAt:0, game:null, catch:null },
   effects: [], sparkles: [],
-  saveTimer: 0, hudTimer: 0, mmTimer: 0, weatherDur: 0,
+  saveTimer: 0, hudTimer: 0, mmTimer: 0, leviSyncTimer: 0, weatherDur: 0,
   frame: 0
 };
 const Fishing = { lastBiteCheck:0, held:false, lastStatus:'' };
@@ -158,13 +158,17 @@ function advanceTime(){
 }
 function leviStatus(){
   const now = new Date();
-  const h = now.getUTCHours();
-  const evenH = h - (h%2);
-  const start = new Date(now); start.setUTCHours(evenH,0,0,0);
+  const start = new Date(now); start.setUTCMinutes(0,0,0);
   const end = new Date(start.getTime()); end.setUTCMinutes(end.getUTCMinutes()+10);
   if(now >= start && now < end) return { active:true, start, end };
-  const next = new Date(start.getTime()); next.setUTCHours(next.getUTCHours()+2);
+  const next = new Date(start.getTime()); next.setUTCHours(next.getUTCHours()+1);
   return { active:false, start:next, end:null };
+}
+function leviHealth(){
+  const lv=leviStatus();
+  const event=G.state.levi;
+  if(!lv.active||!event) return {hp:100,maxHp:100,winner:null};
+  return {hp:Math.max(0,Math.min(event.maxHp||100,event.hp==null?100:event.hp)),maxHp:event.maxHp||100,winner:event.winner||null};
 }
 
 /* ---------------- location ---------------- */
@@ -540,6 +544,27 @@ function resolveCatch(){
   UI.showCatch(c, { sold, bonusCoins });
   sfx(c.perfect ? 1200 : 980, 0.15, 0.12, c.perfect?'triangle':'sine');
   Net.throttledSubmit();
+  if(G.fish.pool && G.fish.pool.levi) damageLeviathanCatch();
+}
+
+function damageLeviathanCatch(){
+  Net.damageLeviathan().then(result=>{
+    if(!result.ok) return;
+    if(result.won) awardLeviathanWinner(result.event.hour);
+  });
+}
+function awardLeviathanWinner(hour){
+  const prizeKey='fishvr_levi_prize_'+hour;
+  try{ if(localStorage.getItem(prizeKey)) return; localStorage.setItem(prizeKey,'1'); }catch(e){}
+  const f=BY_NAME['Leviathan Eye'];
+  if(!f) return;
+  const prize=makeCatch(f,statSums());
+  prize.wt=10; prize.val=Math.max(prize.val,5000); prize.new=!save.index[prize.name];
+  save.index[prize.name]=true; save.caught.push(prize); save.stats.totalCaught++;
+  updateQuests(prize); updateBounties(prize); checkIndexCompletion(prize.name);
+  addXp(RARITIES.Exotic.xpPerfect||75); persist();
+  toast('🏆 FINAL CATCH! You claimed the Leviathan Eye!','gold');
+  UI.showCatch(prize,{bonusCoins:0}); Net.bump();
 }
 
 function relicToKey(name){
@@ -1081,11 +1106,14 @@ function updateHud(){
   byId('locPool').textContent = loc.pool && POOL_MODS[loc.pool] ? POOL_MODS[loc.pool].desc : (loc.levi ? 'The baby leviathan stirs…' : '');
   const lv = leviStatus();
   if(lv.active){
+    const health=leviHealth();
     byId('leviWrap').classList.remove('hidden');
     byId('leviCountWrap').classList.remove('hidden');
     const rem = Math.max(0, lv.end.getTime() - Date.now());
-    byId('leviTimer').textContent = '⌛ Leviathan swims away in '+mmss(rem/1000);
-    byId('leviCountdown').textContent = '🦈 '+mmss(rem/1000);
+    byId('leviHp').textContent=health.hp+' / '+health.maxHp;
+    byId('leviBar').style.width=(health.hp/health.maxHp*100)+'%';
+    byId('leviTimer').textContent = health.hp<=0 ? '🏆 '+(health.winner?health.winner.name:'An angler')+' landed the final catch!' : '⌛ Leviathan swims away in '+mmss(rem/1000);
+    byId('leviCountdown').textContent = '🦈 '+health.hp+'/'+health.maxHp+' · '+mmss(rem/1000);
   } else {
     byId('leviWrap').classList.add('hidden');
     byId('leviCountWrap').classList.add('hidden');
@@ -1655,18 +1683,51 @@ function drawIslands(){
   });
 
   const lv = leviStatus();
-  if(lv.active){
-    const s = LEVIATHAN_SPOT;
-    ctx.fillStyle = 'rgba(10,20,40,.5)';
-    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = 'rgba(255,80,90,.8)'; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(s.x, s.y, s.r*0.7, 0, Math.PI*2); ctx.stroke();
-    ctx.fillStyle = '#1a2a45';
-    ctx.beginPath(); ctx.ellipse(s.x + Math.sin(G.frame*0.05)*6, s.y + Math.cos(G.frame*0.05)*6, 26, 12, Math.atan2(s.y-G.cam.y, s.x-G.cam.x), 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = 'rgba(255,90,100,.8)';
-    ctx.beginPath(); ctx.arc(s.x, s.y, 5, 0, Math.PI*2); ctx.fill();
-  }
+  if(lv.active) drawBabyLeviathan(LEVIATHAN_SPOT, leviHealth());
   ctx.restore();
+}
+
+function drawBabyLeviathan(s, health){
+  const t=G.frame*0.028;
+  const x=s.x+Math.sin(t*.73)*s.r*.42;
+  const y=s.y+Math.cos(t*.97)*s.r*.26;
+  const a=Math.cos(t*.73)>=0 ? Math.sin(t*.73)*.38 : Math.PI-Math.sin(t*.73)*.38;
+  const pulse=.55+.45*Math.sin(t*2.4);
+
+  ctx.save();
+  ctx.fillStyle='rgba(10,9,30,.48)';
+  ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(255,91,114,'+(.55+pulse*.3)+')'; ctx.lineWidth=3;
+  ctx.setLineDash([8,8]); ctx.lineDashOffset=-G.frame*.7;
+  ctx.beginPath(); ctx.arc(s.x,s.y,s.r*.92,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+
+  ctx.translate(x,y); ctx.rotate(a);
+  ctx.fillStyle='rgba(0,0,0,.28)';
+  ctx.beginPath(); ctx.ellipse(5,14,62,22,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#101b3d';
+  ctx.beginPath(); ctx.moveTo(-53,0); ctx.quadraticCurveTo(-78,-24,-92,-4); ctx.lineTo(-78,4); ctx.quadraticCurveTo(-70,26,-53,12); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#18295c';
+  ctx.beginPath(); ctx.ellipse(-4,0,58,26,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#263d7a';
+  ctx.beginPath(); ctx.ellipse(14,-7,38,15,-.08,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#101b3d';
+  ctx.beginPath(); ctx.moveTo(-8,-18); ctx.lineTo(5,-48); ctx.lineTo(18,-18); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(17,18); ctx.lineTo(35,43); ctx.lineTo(42,14); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-5,19); ctx.lineTo(10,39); ctx.lineTo(20,17); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#b8d4ff';
+  ctx.beginPath(); ctx.ellipse(38,-8,10,9,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#ff516b'; ctx.shadowColor='#ff334f'; ctx.shadowBlur=12;
+  ctx.beginPath(); ctx.arc(40,-8,4,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+  ctx.fillStyle='#c9dcff';
+  for(let i=0;i<5;i++){ const fx=19+i*8; ctx.beginPath(); ctx.moveTo(fx,17); ctx.lineTo(fx+4,24); ctx.lineTo(fx+7,17); ctx.closePath(); ctx.fill(); }
+  ctx.restore();
+
+  const w=156,h=10,barY=y-68,ratio=health.hp/health.maxHp;
+  ctx.fillStyle='rgba(3,9,22,.9)'; roundRect(x-w/2-4,barY-21,w+8,29,7); ctx.fill();
+  ctx.font='900 10px system-ui,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillStyle='#ffe8a8'; ctx.fillText('BABY LEVIATHAN  '+health.hp+'/'+health.maxHp,x,barY-10);
+  ctx.fillStyle='rgba(255,255,255,.16)'; roundRect(x-w/2,barY,w,h,5); ctx.fill();
+  if(ratio>0){ ctx.fillStyle=ratio>.4?'#ff6b70':'#ff334f'; roundRect(x-w/2,barY,Math.max(5,w*ratio),h,5); ctx.fill(); }
 }
 
 function updateAltarBtn(){
@@ -1895,6 +1956,11 @@ function loop(t){
   }
 
   G.curLoc = detectLoc();
+  G.leviSyncTimer -= delta;
+  if(G.leviSyncTimer <= 0){
+    G.leviSyncTimer = 3;
+    if(leviStatus().active && window.Net) Net.refreshLeviathan();
+  }
   updateAltarBtn();
   G.cam.x += (G.boat.x - G.cam.x) * Math.min(1, delta*5);
   G.cam.y += (G.boat.y - G.cam.y) * Math.min(1, delta*5);
@@ -1931,7 +1997,7 @@ const Game = {
   buyGear, equipGear, buyBoat, equipBoat, boatRoulette, doEnchant, redeemCode,
   claimQuest, claimBounty, genBounties, updateBounties, questUnlocked, activeQuests, questProg,
   grantTitle, checkTitle, checkIndexCompletion, addXp, xpNeed, addItem,
-  itemCanShow, leviStatus, relicToKey, locName, effLuck, effAtt, fishValue,
+  itemCanShow, leviStatus, leviHealth, relicToKey, locName, effLuck, effAtt, fishValue,
   updateHud, resetSave, questMap: ()=>QUESTS,
   titles: ()=>TITLES, codes: ()=>CODES, poolMods: POOL_MODS,
   indexCount: ()=>Object.keys(save.index).length,
