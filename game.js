@@ -1116,8 +1116,11 @@ function toggleLand(){
 }
 function updatePlayer(dt){
   const p=G.player;
-  let dx=G.input.x, dy=-G.input.y;
-  if(G.input.joyAng!=null){ dx=Math.sin(G.input.joyAng)*G.input.joyMag; dy=-Math.cos(G.input.joyAng)*G.input.joyMag; }
+  let sx=G.input.x, sy=-G.input.y;
+  if(G.input.joyAng!=null){ sx=Math.sin(G.input.joyAng)*G.input.joyMag; sy=-Math.cos(G.input.joyAng)*G.input.joyMag; }
+  /* Convert screen-relative walking input through the tilted camera. */
+  const c=Math.cos(CAMERA_YAW), s=Math.sin(CAMERA_YAW);
+  let dx=c*sx+s*sy, dy=-s*sx+c*sy;
   const mag=Math.hypot(dx,dy);
   if(mag>0.02){
     dx/=Math.max(1,mag); dy/=Math.max(1,mag); p.head=Math.atan2(dy,dx);
@@ -1246,15 +1249,21 @@ const THEME = {
   twilight:{ water:'#3b2f6e', sand:'#5c4a8f', land:'#4a3a78', dark:'#2f2452', decor:'#c58cff', halo:'#7a6fd0' },
   rock:{ water:'#1f7fc2', sand:'#8f8f8f', land:'#6a6a6a', dark:'#4a4a4a', decor:'#b8f2ff', halo:'#79c8ea' }
 };
-const WORLD_Y_SCALE=0.79;
+const WORLD_Y_SCALE=0.64, CAMERA_YAW=-0.28;
 function applyWorldTransform(c){
   const z=G.cam.zoom;
   c.translate(W/2,H/2);
   c.scale(z,z*WORLD_Y_SCALE);
+  c.rotate(CAMERA_YAW);
   c.translate(-G.cam.x,-G.cam.y);
 }
 function worldViewport(){
-  return {x:G.cam.x-W/(2*G.cam.zoom),y:G.cam.y-H/(2*G.cam.zoom*WORLD_Y_SCALE),w:W/G.cam.zoom,h:H/(G.cam.zoom*WORLD_Y_SCALE)};
+  const reach=Math.hypot(W/(2*G.cam.zoom),H/(2*G.cam.zoom*WORLD_Y_SCALE))*1.12;
+  return {x:G.cam.x-reach,y:G.cam.y-reach,w:reach*2,h:reach*2};
+}
+function worldToScreen(x,y){
+  const dx=x-G.cam.x, dy=y-G.cam.y, c=Math.cos(CAMERA_YAW), s=Math.sin(CAMERA_YAW);
+  return {x:(c*dx-s*dy)*G.cam.zoom+W/2,y:(s*dx+c*dy)*G.cam.zoom*WORLD_Y_SCALE+H/2};
 }
 
 function resize(){
@@ -2016,7 +2025,7 @@ function drawBoat(){
     const p=G.player;
     const walking=Math.hypot(G.input.x,G.input.y)>0.02||G.input.joyMag>.02;
     const bob=walking?Math.sin(G.frame*.36)*1.5:0;
-    ctx.save(); ctx.translate(p.x-b.x,p.y-b.y+bob); ctx.scale(1.55,1.55);
+    ctx.save(); ctx.translate(p.x-b.x,p.y-b.y+bob); ctx.rotate(p.head+Math.PI/2); ctx.scale(1.55,1.55);
     ctx.fillStyle='rgba(0,10,20,.28)'; ctx.beginPath(); ctx.ellipse(0,8,7,3,0,0,Math.PI*2); ctx.fill();
     ctx.fillStyle='#f0c8a0'; ctx.beginPath(); ctx.arc(0,-7,4.4,0,Math.PI*2); ctx.fill();
     ctx.fillStyle='#ffcf5e'; ctx.fillRect(-4.8,-2,9.6,10);

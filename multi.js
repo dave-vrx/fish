@@ -318,7 +318,7 @@ const Multi = (()=>{
   function draw(){
     if(!started) return;
     const z=G.cam.zoom;
-    const halfX=W/(2*z), halfY=H/(2*z*WORLD_Y_SCALE);
+    const view=worldViewport(), halfX=view.w/2, halfY=view.h/2;
     ctx.save();
     applyWorldTransform(ctx);
     for(const id in players){
@@ -330,13 +330,13 @@ const Multi = (()=>{
     const now=Date.now();
     for(const id in players){
       const p=players[id];
-      const sx=(p.x-G.cam.x)*z+W/2, sy=(p.y-G.cam.y)*z*WORLD_Y_SCALE+H/2;
+      const pt=worldToScreen(p.x,p.y), sx=pt.x, sy=pt.y;
       if(sx<-90||sx>W+90||sy<-160||sy>H+70) continue;
       drawTag(sx,sy,p.name,p.lvl,p.color, (now-p.chatAt<BUBBLE_MS)?p.chat:null, p.title, p.badges);
     }
     if(G.save.name){
       const actor=G.player.onFoot?G.player:G.boat;
-      const mx=(actor.x-G.cam.x)*z+W/2, my=(actor.y-G.cam.y)*z*WORLD_Y_SCALE+H/2;
+      const mine=worldToScreen(actor.x,actor.y), mx=mine.x, my=mine.y;
       if(mx>-90&&mx<W+90&&my>-160&&my<H+70){
         drawTag(mx,my,G.save.name,G.save.level,myColor(), (now-myBubble.at<BUBBLE_MS)?myBubble.text:null, activeTitle(), G.save.badges||{});
       }
