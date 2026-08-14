@@ -637,6 +637,15 @@ function claimBounty(i){
 }
 
 /* ---------------- titles ---------------- */
+function activeTitle(){
+  let best = null, bestRank = -1;
+  for(const name in save.titles.done){
+    const rank = TITLES.findIndex(t => t.name === name);
+    const r = rank < 0 ? TITLES.length + 10 : rank;
+    if(r > bestRank){ bestRank = r; best = name; }
+  }
+  return best;
+}
 function grantTitle(name, silent){
   if(save.titles.done[name]) return;
   save.titles.done[name] = true;
