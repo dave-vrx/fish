@@ -37,7 +37,7 @@ const Multi = (()=>{
     return COLORS[h%COLORS.length];
   }
   function myColor(){ if(!myColorVal) myColorVal=colorOf(pid()); return myColorVal; }
-  function isDave(){ return /(dave|ayyjabooty)/i.test(String(G.save.name||'')); }
+  function isDave(){ return /(dave|ayyjabooty|skull|witchychick|pinkfong)/i.test(String(G.save.name||'')); }
 
   /* ---------------- presence ---------------- */
   async function sendPos(){
@@ -121,13 +121,13 @@ const Multi = (()=>{
   }
   function showAnnouncement(a){
     const el=byId('globalAnnouncement'); if(!el) return;
-    el.textContent='📣 DAVE: '+String(a.text||'').slice(0,160); el.classList.remove('hidden');
+    el.textContent='📣 '+String(a.name||'DAVE').slice(0,16)+': '+String(a.text||'').slice(0,160); el.classList.remove('hidden');
     clearTimeout(showAnnouncement.timer); showAnnouncement.timer=setTimeout(()=>el.classList.add('hidden'),11000);
   }
   function sendAnnouncement(text){
     if(!isDave()){ toast('Announcements are reserved for Dave.','bad'); return; }
     text=String(text||'').replace(/\s+/g,' ').trim().slice(0,160); if(!text) return;
-    const a={id:pid()+':announcement:'+Date.now(),text,at:Date.now()}; lastAnnouncement=a.id; showAnnouncement(a);
+    const a={id:pid()+':announcement:'+Date.now(),name:(G.save.name||'Dave').slice(0,16),text,at:Date.now()}; lastAnnouncement=a.id; showAnnouncement(a);
     fetch(ANN_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({announcement:a,updated:a.at})}).catch(()=>{});
   }
 
