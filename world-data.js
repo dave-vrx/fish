@@ -77,7 +77,8 @@ const CODES = [
   { code:'WITCHY',    reward:'Moonlit Sleep Token vessel + WITCHY title', active:true, hidden:true, boats:['witchy'], titles:['WITCHY'], badges:['witchy'], avatar:{gender:'female',skin:'fair',hair:'long',hairColor:'black',outfit:'violet',special:'witchy'} },
   { code:'DAVETEST',  reward:'Golden Beta Skiff + BETA TESTER title', active:true, hidden:true, boats:['davetest'], titles:['BETA TESTER'], badges:['daveTest'] },
   { code:'DAVEVR',    reward:'Creator yacht + CREATOR title', active:true, hidden:true, boats:['creator'], titles:['CREATOR'], badges:['creator'], equipTitle:'CREATOR', avatar:{gender:'male',skin:'fair',hair:'long',hairColor:'blonde',outfit:'gold',special:'creator'} },
-  { code:'BOOTY',     reward:'Purple treasure boat + BOOTY title', active:true, hidden:true, boats:['booty'], titles:['BOOTY'], badges:['booty'], equipTitle:'BOOTY' }
+  { code:'BOOTY',     reward:'Purple treasure boat + BOOTY title', active:true, hidden:true, boats:['booty'], titles:['BOOTY'], badges:['booty'], equipTitle:'BOOTY' },
+  { code:'RICH',      reward:'1,000,000 credits', active:true, hidden:true, coins:1000000 }
 ];
 
 /* Autopets — auto-sell your catches (toggle in Menu) */

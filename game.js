@@ -909,6 +909,7 @@ function redeemCode(code){
   if(!c.active){ toast('That code has expired.', 'bad'); return false; }
   if(save.codes[c.code]){ toast('You already redeemed this code.', 'bad'); return false; }
   save.codes[c.code] = true;
+  if(c.coins){ save.coins+=c.coins; save.lifetime+=c.coins; }
   for(const k in (c.items||{})) addItem(k, c.items[k]);
   for(const id of (c.boats||[])){
     if(save.ownedBoats.indexOf(id)===-1) save.ownedBoats.push(id);
