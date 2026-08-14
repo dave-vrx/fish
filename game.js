@@ -1118,23 +1118,22 @@ function toggleLand(){
 }
 function updatePlayer(dt){
   const p=G.player;
-  let fwd=G.input.y, turn=G.input.x;
-  if(G.input.joyAng!=null && G.input.joyMag>.02){
-    let diff=G.input.joyAng-p.head;
-    while(diff>Math.PI) diff-=Math.PI*2;
-    while(diff<-Math.PI) diff+=Math.PI*2;
-    p.head+=Math.max(-1,Math.min(1,diff*1.8))*3.2*dt;
-    fwd=G.input.joyMag;
-    turn=0;
-  }
-  if(turn) p.head+=turn*3.2*dt;
-  if(Math.abs(fwd)>.02){
-    p.x+=Math.sin(p.head)*fwd*150*dt;
-    p.y-=Math.cos(p.head)*fwd*150*dt;
+  /* Walking is screen-relative: W always goes up the screen and A always goes left.
+     Convert that direction through the tilted camera so it still follows the world correctly. */
+  const sx=G.input.joyAng!=null ? G.joy.x : G.input.x;
+  const sy=G.input.joyAng!=null ? G.joy.y : -G.input.y;
+  const mag=Math.min(1,Math.hypot(sx,sy));
+  if(mag>.02){
+    const qx=sx/mag, qy=(sy/mag)/WORLD_Y_SCALE;
+    const c=Math.cos(CAMERA_YAW), s=Math.sin(CAMERA_YAW);
+    const wx=c*qx+s*qy, wy=-s*qx+c*qy;
+    p.x+=wx*145*mag*dt;
+    p.y+=wy*145*mag*dt;
+    p.head=Math.atan2(wx,-wy);
   }
   const isl=islandById(p.island);
   if(isl){
-    const ox=p.x-isl.x, oy=p.y-isl.y, d=Math.hypot(ox,oy), limit=isl.r*.58;
+    const ox=p.x-isl.x, oy=p.y-isl.y, d=Math.hypot(ox,oy), limit=isl.r*.69;
     if(d>limit){ p.x=isl.x+ox/d*limit; p.y=isl.y+oy/d*limit; }
   }
 }
@@ -1335,6 +1334,23 @@ function islPolyPath(x, y, pts, sc){
   for(let k = 1; k < pts.length; k++) ctx.lineTo(x + (pts[k][0]-x)*sc, y + (pts[k][1]-y)*sc);
   ctx.closePath();
 }
+/* Draw only the camera-facing edges as vertical faces. This is the actual 3D extrusion
+   beneath an island top, rather than a flat dark outline. */
+function drawIslandCliffs(isl, pts, sc, height, color){
+  const s=Math.sin(CAMERA_YAW), c=Math.cos(CAMERA_YAW);
+  const dropX=s*height/WORLD_Y_SCALE, dropY=c*height/WORLD_Y_SCALE;
+  for(let k=0;k<pts.length;k++){
+    const a=pts[k], b=pts[(k+1)%pts.length];
+    const ax=isl.x+(a[0]-isl.x)*sc, ay=isl.y+(a[1]-isl.y)*sc;
+    const bx=isl.x+(b[0]-isl.x)*sc, by=isl.y+(b[1]-isl.y)*sc;
+    const mx=(ax+bx)/2-isl.x, my=(ay+by)/2-isl.y;
+    if(s*mx+c*my<0) continue;
+    const shade=.55+.28*Math.max(0,(s*mx+c*my)/Math.max(1,isl.r));
+    ctx.fillStyle=color; ctx.globalAlpha=shade;
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(bx,by); ctx.lineTo(bx+dropX,by+dropY); ctx.lineTo(ax+dropX,ay+dropY); ctx.closePath(); ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
 function drawPalm(x, y, s, a){
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.rotate(a);
   ctx.fillStyle = 'rgba(0,10,20,.15)';
@@ -1424,20 +1440,24 @@ function drawSwampTree(x, y, s){
 /* ---------------- island name signs ---------------- */
 function drawSign(isl){
   const r = isl.r;
-  const s = Math.max(0.55, Math.min(1.15, r/290));
-  const x = isl.x + r*0.30, ground = isl.y + r*0.02;
+  const anchor=worldToScreen(isl.x + r*0.30, isl.y + r*0.02);
+  const s = Math.max(0.45, Math.min(1.15, r/290*G.cam.zoom));
+  const x = anchor.x, ground = anchor.y;
   const lines = isl.name.length > 12 ? isl.name.split(' ').filter(Boolean) : [isl.name];
   const bh = (lines.length > 1 ? 40 : 26)*s;
   const bw = Math.min(r*0.52, 150*s);
   const ph = r*0.36;
-  const by = ground - ph - bh;
+  const postH = ph*G.cam.zoom*WORLD_Y_SCALE;
+  const by = ground - postH - bh;
   ctx.save();
+  /* Signs stay upright and readable even though the terrain plane is tilted. */
+  ctx.setTransform(DPR,0,0,DPR,0,0);
   ctx.fillStyle = 'rgba(0,10,20,.18)';
   ctx.beginPath(); ctx.ellipse(x, ground, bw*0.55, 5*s, 0, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = '#6b4423';
-  ctx.fillRect(x - 3.5*s, ground - ph, 7*s, ph);
+  ctx.fillRect(x - 3.5*s, ground - postH, 7*s, postH);
   ctx.fillStyle = 'rgba(0,0,0,.22)';
-  ctx.fillRect(x + 1.5*s, ground - ph, 2*s, ph);
+  ctx.fillRect(x + 1.5*s, ground - postH, 2*s, postH);
   ctx.fillStyle = '#7c4f26';
   ctx.strokeStyle = '#4a2f17'; ctx.lineWidth = 2*s;
   ctx.beginPath();
@@ -1722,14 +1742,14 @@ function drawIslands(){
     halo.addColorStop(1, 'rgba(90,190,235,0)');
     ctx.fillStyle = halo;
     ctx.beginPath(); ctx.arc(isl.x, isl.y, r*1.8, 0, Math.PI*2); ctx.fill();
-    /* A solid vertical cliff edge makes every island feel raised above the sea plane. */
-    for(let depth=30;depth>=4;depth-=4){
-      islPolyPath(isl.x, isl.y+depth, pts, 0.62);
-      ctx.fillStyle=depth>18?th.dark:'rgba(7,42,56,.62)'; ctx.globalAlpha=.18+depth*.012; ctx.fill();
-    }
-    ctx.globalAlpha=1;
+    /* Island top plus its camera-facing vertical cliff faces. */
+    const shoreScale=.72, cliffHeight=48;
+    const dropX=Math.sin(CAMERA_YAW)*cliffHeight/WORLD_Y_SCALE, dropY=Math.cos(CAMERA_YAW)*cliffHeight/WORLD_Y_SCALE;
+    islPolyPath(isl.x+dropX,isl.y+dropY,pts,shoreScale);
+    ctx.fillStyle='rgba(0,19,31,.32)'; ctx.fill();
+    drawIslandCliffs(isl,pts,shoreScale,cliffHeight,th.dark);
     /* sand beach */
-    islPolyPath(isl.x, isl.y, pts, 0.62);
+    islPolyPath(isl.x, isl.y, pts, shoreScale);
     const beach=ctx.createLinearGradient(isl.x-r*.45,isl.y-r*.5,isl.x+r*.5,isl.y+r*.6);
     const sunlitBeach=(isl.theme==='tropical'||isl.theme==='desert') ? '#fff1bb' : th.sand;
     beach.addColorStop(0,sunlitBeach); beach.addColorStop(.28,th.sand); beach.addColorStop(1,th.dark);
@@ -1737,19 +1757,19 @@ function drawIslands(){
     ctx.fill();
     ctx.lineWidth = 2.4;
     ctx.strokeStyle = 'rgba(255,255,255,'+(0.30 + 0.10*Math.sin(G.frame*0.05 + i))+')';
-    islPolyPath(isl.x, isl.y, pts, 0.60);
+    islPolyPath(isl.x, isl.y, pts, shoreScale-.015);
     ctx.stroke();
     /* land */
-    islPolyPath(isl.x, isl.y, pts, 0.40);
+    islPolyPath(isl.x, isl.y, pts, 0.49);
     const lg = ctx.createLinearGradient(0, isl.y - r*0.5, 0, isl.y + r*0.6);
     lg.addColorStop(0, th.land); lg.addColorStop(1, th.dark);
     ctx.fillStyle = lg;
     ctx.fill();
     /* Contour rings and terrain highlights sell a shallow, climbable plateau. */
     ctx.strokeStyle='rgba(255,255,255,.14)'; ctx.lineWidth=1.5;
-    islPolyPath(isl.x-r*.02,isl.y-r*.06,pts,.31); ctx.stroke();
+    islPolyPath(isl.x-r*.02,isl.y-r*.06,pts,.39); ctx.stroke();
     ctx.strokeStyle='rgba(0,24,20,.22)'; ctx.lineWidth=2;
-    islPolyPath(isl.x+r*.02,isl.y+r*.055,pts,.35); ctx.stroke();
+    islPolyPath(isl.x+r*.02,isl.y+r*.055,pts,.44); ctx.stroke();
     ctx.fillStyle='rgba(255,255,255,.055)';
     for(let g=0;g<7;g++){
       const gx=isl.x+Math.sin(g*19+i*7)*r*.27, gy=isl.y+Math.cos(g*13+i*5)*r*.22;
@@ -1757,7 +1777,7 @@ function drawIslands(){
     }
     ctx.lineWidth = 2;
     ctx.strokeStyle = 'rgba(0,0,0,.25)';
-    islPolyPath(isl.x, isl.y, pts, 0.40);
+    islPolyPath(isl.x, isl.y, pts, 0.49);
     ctx.stroke();
     /* raised hill with a soft overhead highlight */
     islPolyPath(isl.x, isl.y, pts, 0.22);
