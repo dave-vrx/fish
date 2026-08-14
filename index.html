@@ -45,7 +45,7 @@
 
 <!-- Current location tag -->
 <div id="locTag"><span id="locName">Coconut Bay</span><span id="locPool"></span></div>
-<div id="landAvatar" class="hidden"><div class="land-name" id="landName"></div><div class="land-title" id="landTitle"></div><div class="land-walker">🧍</div></div>
+<div id="landAvatar" class="hidden"><div class="land-name" id="landName"></div><div class="land-title" id="landTitle"></div><div class="land-walker" id="landWalker"><i class="avatar-hair"></i><i class="avatar-head"></i><i class="avatar-body"></i><i class="avatar-arm avatar-arm-l"></i><i class="avatar-arm avatar-arm-r"></i><i class="avatar-leg avatar-leg-l"></i><i class="avatar-leg avatar-leg-r"></i></div></div>
 
 <!-- Enchant Altar CTA (appears near The Altar) -->
 <button id="btnAltar" class="hidden" onclick="UI.openEnchant()">✨ Enchant Altar</button>
@@ -283,6 +283,16 @@
 </div>
 
 <!-- Help / Settings -->
+<div class="veil hidden" id="veilAvatar">
+  <div class="modal modal-wide avatar-modal">
+    <h1>🧍 Avatar Designer</h1>
+    <p class="modal-sub">Choose your angler's look. Your on-island avatar updates right away.</p>
+    <div class="avatar-designer-preview"><div class="land-walker avatar-preview-walker" id="avatarPreview"><i class="avatar-hair"></i><i class="avatar-head"></i><i class="avatar-body"></i><i class="avatar-arm avatar-arm-l"></i><i class="avatar-arm avatar-arm-r"></i><i class="avatar-leg avatar-leg-l"></i><i class="avatar-leg avatar-leg-r"></i></div></div>
+    <div class="avatar-options" id="avatarOptions"></div>
+    <div class="modal-actions"><button class="btn-primary" onclick="UI.close('veilAvatar')">Done</button></div>
+  </div>
+</div>
+
 <div class="veil hidden" id="veilHelp">
   <div class="modal modal-wide">
     <h1>📖 How to Play</h1>
@@ -299,6 +309,7 @@
     <div class="settings-block">
       <button class="btn-ghost" onclick="UI.openTitles()">🏅 View Titles</button>
       <button class="btn-ghost" onclick="UI.openCodes()">🎟️ Redeem Codes</button>
+      <button class="btn-ghost" onclick="UI.openAvatar()">🧍 Design Avatar</button>
       <button class="btn-ghost" onclick="UI.toggleAutoSell()"><span id="autoSellLbl">🤖 Auto-Sell: OFF</span></button>
       <button class="btn-ghost" onclick="UI.toggleSound()"><span id="soundLbl">🔊 Sound: ON</span></button>
       <button class="btn-danger" onclick="UI.resetGame()">🗑️ Reset All &amp; Clear My Score</button>

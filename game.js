@@ -45,6 +45,7 @@ function freshSave(){
     titles: { done: {} },
     codes: {},
     autopets: {}, autoSell: false, badges: {},
+    avatar: { gender:'female', skin:'warm', hair:'long', hairColor:'brown', outfit:'teal' },
     potionLuck: 0, potionSpeed: 0,
     bounties: { date: '', list: [] },
     stats: { totalCaught:0, totalSold:0, perfect:0, big:0, maxWt:0, bounties:0 },
@@ -61,6 +62,7 @@ function loadSave(){
     save.titles = Object.assign({done:{}}, raw.titles||{});
     save.stats = Object.assign({totalCaught:0,totalSold:0,perfect:0,big:0,maxWt:0,bounties:0}, raw.stats||{});
     save.badges = Object.assign({}, raw.badges||{});
+    save.avatar = Object.assign({gender:'female', skin:'warm', hair:'long', hairColor:'brown', outfit:'teal'}, raw.avatar||{});
   }
 }
 function persist(){
@@ -2037,6 +2039,20 @@ function updateLandAvatar(){
   const meta=TITLES.find(t=>t.name===title);
   byId('landTitle').textContent=title;
   byId('landTitle').style.color=(meta&&meta.color)||'#ffd166';
+  applyAvatarLook(byId('landWalker'));
+}
+
+function applyAvatarLook(el){
+  if(!el) return;
+  const a=Object.assign({gender:'female', skin:'warm', hair:'long', hairColor:'brown', outfit:'teal'}, save.avatar||{});
+  const skins={fair:'#f7d5bc',warm:'#d89b73',deep:'#88563f'};
+  const hairs={black:'#202335',brown:'#75442e',blonde:'#efc35f',pink:'#ff75b5',blue:'#5dc9f5'};
+  const outfits={teal:'#2fc3c9',coral:'#ff766b',violet:'#8e72ee',gold:'#e7b94d',navy:'#37689b'};
+  el.dataset.gender=a.gender;
+  el.dataset.hair=a.hair;
+  el.style.setProperty('--skin', skins[a.skin]||skins.warm);
+  el.style.setProperty('--hair', hairs[a.hairColor]||hairs.brown);
+  el.style.setProperty('--outfit', outfits[a.outfit]||outfits.teal);
 }
 
 function drawOverlays(){
@@ -2199,7 +2215,7 @@ const Game = {
   updateHud, resetSave, questMap: ()=>QUESTS,
   titles: ()=>TITLES, codes: ()=>CODES, poolMods: POOL_MODS,
   indexCount: ()=>Object.keys(save.index).length,
-  persist,
+  persist, applyAvatarLook,
   refreshBounties: ()=>{ genBounties(); },
   init(){
     loadSave();

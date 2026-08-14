@@ -87,7 +87,17 @@ input{font-family:inherit}
   padding:5px 14px;font-size:13px;font-weight:800;backdrop-filter:blur(3px);
 }
 #landAvatar{position:fixed;left:0;top:0;z-index:7;pointer-events:none;transform:translate(-50%,-100%);text-align:center;filter:drop-shadow(0 4px 3px rgba(0,0,0,.35))}
-.land-walker{font-size:34px;line-height:.82;text-shadow:0 5px 3px rgba(0,0,0,.3)}
+.land-walker{--skin:#d89b73;--hair:#75442e;--outfit:#2fc3c9;position:relative;width:34px;height:49px;margin:1px auto 0;filter:drop-shadow(0 5px 3px rgba(0,0,0,.3))}
+.land-walker i{position:absolute;display:block;box-sizing:border-box}
+.avatar-head{z-index:2;left:10px;top:7px;width:14px;height:15px;border-radius:48% 48% 45% 45%;background:var(--skin);border:1px solid rgba(35,22,20,.18)}
+.avatar-hair{z-index:3;left:8px;top:4px;width:18px;height:12px;border-radius:58% 58% 35% 35%;background:var(--hair)}
+.land-walker[data-hair="short"] .avatar-hair{height:9px;top:5px;border-radius:70% 70% 35% 35%}
+.land-walker[data-hair="bun"] .avatar-hair{height:11px}.land-walker[data-hair="bun"] .avatar-hair:after{content:"";position:absolute;width:7px;height:7px;border-radius:50%;background:var(--hair);top:-5px;left:6px}
+.land-walker[data-hair="long"] .avatar-hair{height:20px;border-radius:55% 55% 40% 40%;clip-path:polygon(0 0,100% 0,100% 100%,78% 88%,68% 100%,50% 86%,30% 100%,18% 86%,0 100%)}
+.avatar-body{z-index:2;left:9px;top:20px;width:16px;height:18px;border-radius:6px 6px 3px 3px;background:var(--outfit);border:1px solid rgba(12,30,45,.28)}
+.land-walker[data-gender="female"] .avatar-body{left:7px;width:20px;clip-path:polygon(19% 0,81% 0,100% 100%,0 100%)}
+.avatar-arm{z-index:1;top:21px;width:5px;height:15px;border-radius:6px;background:var(--skin)}.avatar-arm-l{left:6px;transform:rotate(13deg)}.avatar-arm-r{right:6px;transform:rotate(-13deg)}
+.avatar-leg{z-index:1;top:36px;width:6px;height:13px;border-radius:2px;background:#1b3856}.avatar-leg-l{left:10px}.avatar-leg-r{right:10px}
 .land-name{display:inline-block;padding:3px 8px;border-radius:999px;background:rgba(6,20,34,.9);border:1px solid #7fe7ff;color:#eaf6ff;font-size:11px;font-weight:900;white-space:nowrap}
 .land-title{min-height:11px;margin-bottom:0;color:#ffd166;font-size:9px;font-weight:900;text-shadow:0 1px 3px #000;white-space:nowrap}
 #locTag span#locPool{font-size:11px;color:var(--dim);margin-top:4px;font-weight:600}
@@ -477,6 +487,9 @@ input{font-family:inherit}
 .settings-block{display:grid;gap:8px;margin:16px 0;grid-template-columns:1fr 1fr}
 .about-box{font-size:11px;color:var(--dim2);line-height:1.6;background:rgba(3,16,28,.5);border-radius:10px;padding:10px;margin-top:8px}
 .about-box b{color:var(--dim)}
+.avatar-designer-preview{height:110px;display:flex;align-items:flex-end;justify-content:center;margin:8px 0 14px;background:linear-gradient(180deg,rgba(61,208,241,.12),rgba(4,28,49,.42));border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.avatar-preview-walker{transform:scale(1.8);transform-origin:center bottom;margin-bottom:18px}
+.avatar-options{display:grid;gap:12px}.avatar-option h2{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px}.avatar-choice-row{display:flex;gap:7px;flex-wrap:wrap}.avatar-choice{min-width:58px;padding:8px 9px;border:1px solid var(--line);border-radius:9px;background:rgba(5,31,52,.68);color:var(--ink);font-size:11px;font-weight:800}.avatar-choice.active{border-color:var(--cyan);background:rgba(56,210,244,.18);color:#dffbff;box-shadow:0 0 0 1px rgba(56,210,244,.18) inset}.avatar-swatch{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:4px;border:1px solid rgba(255,255,255,.3)}
 
 /* ============ TOASTS ============ */
 #toasts{position:fixed;top:calc(64px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:50;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none}

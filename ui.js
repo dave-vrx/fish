@@ -472,6 +472,35 @@ const UI = {
     }
   },
 
+  /* ---------- avatar designer ---------- */
+  openAvatar(){
+    UI.closeAllVeils();
+    byId('veilAvatar').classList.remove('hidden');
+    UI.renderAvatar();
+  },
+  renderAvatar(){
+    const a=Object.assign({gender:'female', skin:'warm', hair:'long', hairColor:'brown', outfit:'teal'}, G.save.avatar||{});
+    G.save.avatar=a;
+    const groups=[
+      ['gender','Body',['male','female']],
+      ['skin','Skin tone',['fair','warm','deep']],
+      ['hair','Hairstyle',['short','long','bun']],
+      ['hairColor','Hair colour',['black','brown','blonde','pink','blue']],
+      ['outfit','Clothes',['teal','coral','violet','gold','navy']]
+    ];
+    const colors={fair:'#f7d5bc',warm:'#d89b73',deep:'#88563f',black:'#202335',brown:'#75442e',blonde:'#efc35f',pink:'#ff75b5',blue:'#5dc9f5',teal:'#2fc3c9',coral:'#ff766b',violet:'#8e72ee',gold:'#e7b94d',navy:'#37689b'};
+    const labels={male:'Male',female:'Female',fair:'Fair',warm:'Warm',deep:'Deep',short:'Short',long:'Long',bun:'Bun',black:'Black',brown:'Brown',blonde:'Blonde',pink:'Pink',blue:'Blue',teal:'Teal',coral:'Coral',violet:'Violet',gold:'Gold',navy:'Navy'};
+    byId('avatarOptions').innerHTML=groups.map(([key,name,choices])=>`<section class="avatar-option"><h2>${name}</h2><div class="avatar-choice-row">${choices.map(value=>`<button class="avatar-choice ${a[key]===value?'active':''}" onclick="UI.setAvatar('${key}','${value}')">${colors[value]?'<span class="avatar-swatch" style="background:'+colors[value]+'"></span>':''}${labels[value]}</button>`).join('')}</div></section>`).join('');
+    if(window.Game && Game.applyAvatarLook) Game.applyAvatarLook(byId('avatarPreview'));
+  },
+  setAvatar(key,value){
+    const defaults={gender:'female', skin:'warm', hair:'long', hairColor:'brown', outfit:'teal'};
+    G.save.avatar=Object.assign(defaults,G.save.avatar||{});
+    G.save.avatar[key]=value;
+    Game.persist();
+    UI.renderAvatar();
+  },
+
   /* ---------- help / settings ---------- */
   openHelp(){
     UI.closeAllVeils();
