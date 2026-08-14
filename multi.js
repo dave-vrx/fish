@@ -1,7 +1,7 @@
 'use strict';
 /* ============================================================
    FISH! — Multiplayer & Harbor Chat (MantleDB polling)
-   - Presence: every angler's boat position/heading syncs ~1.6s,
+   - Presence: every angler's boat position/heading syncs ~1.2s,
      smoothed client-side so everyone sails together in real time.
    - Chat: global harbor chat; the last message shows as a bubble
      above each angler's nameplate.
@@ -13,7 +13,7 @@ const Multi = (()=>{
   const PRES_URL='https://mantledb.sh/v2/fishvr/presence';
   const CHAT_URL='https://mantledb.sh/v2/fishvr/chat';
   const COLORS=['#ff5d6c','#ffd166','#46e0a0','#3ee0ff','#c58cff','#ff9de8','#ff8c00','#ff6b9d','#b6ff5e','#7fe7ff'];
-  const PRES_INT=1600, CHAT_INT=1400, STALE=22000, BUBBLE_MS=7000;
+  const PRES_INT=1200, CHAT_INT=1400, STALE=22000, BUBBLE_MS=7000;
 
   const players={};            // id -> remote angler
   let myId='', myColorVal='';
@@ -189,15 +189,20 @@ const Multi = (()=>{
   /* ---------------- per-frame ---------------- */
   function tick(dt){
     if(!started) return;
-    const k=Math.min(1, dt*8);
     for(const id in players){
       const p=players[id];
-      p.x+=(p.tx-p.x)*k;
-      p.y+=(p.ty-p.y)*k;
+      const dx=p.tx-p.x, dy=p.ty-p.y;
+      const dist=Math.hypot(dx,dy);
+      if(dist > 1){
+        const catchSpeed=Math.max(140, dist*2.2);
+        const move=Math.min(dist, catchSpeed*dt);
+        p.x+=(dx/dist)*move;
+        p.y+=(dy/dist)*move;
+      }
       let dh=p.th-p.head;
       while(dh>Math.PI) dh-=Math.PI*2;
       while(dh<-Math.PI) dh+=Math.PI*2;
-      p.head+=dh*k;
+      p.head+=dh*Math.min(1, dt*10);
     }
     const now=Date.now();
     if(myBubble.text && now-myBubble.at>BUBBLE_MS) myBubble={text:null,at:0};
@@ -224,10 +229,7 @@ const Multi = (()=>{
     ctx.rotate(p.head - Math.PI/2);
     ctx.fillStyle='rgba(0,10,20,.18)';
     ctx.beginPath(); ctx.ellipse(2,3,14,9,0,0,Math.PI*2); ctx.fill();
-    const g=ctx.createLinearGradient(0,-8,0,8);
-    g.addColorStop(0,'#e8f2fb'); g.addColorStop(1,'#b9cfe2');
-    ctx.fillStyle=g; ctx.strokeStyle='#9fb6c9'; ctx.lineWidth=1.2;
-    ctx.beginPath(); ctx.moveTo(13,0); ctx.quadraticCurveTo(3,-9,-12,0); ctx.quadraticCurveTo(3,9,13,0); ctx.closePath(); ctx.fill(); ctx.stroke();
+    drawBoatSprite(ctx, p.boat, 0.85);
     ctx.fillStyle=p.color||'#fff';
     ctx.fillRect(-3,-4,7,8);
     ctx.fillStyle='#f0c8a0';

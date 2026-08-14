@@ -480,3 +480,36 @@ input{font-family:inherit}
   #joyZone{opacity:.35}
   .logo em{display:none}
 }
+
+/* ============ FRIENDS & DM ============ */
+#chipFriends{position:relative}
+.friend-status{font-size:11px;color:var(--green);min-height:14px;margin:2px 2px 6px}
+.friend-status.err{color:var(--red)}
+.friend-list{display:flex;flex-direction:column;gap:6px;max-height:38vh;overflow-y:auto}
+.friend-row{display:flex;align-items:center;gap:8px;background:rgba(6,36,60,.5);border:1px solid var(--line);
+  border-radius:10px;padding:8px 10px}
+.friend-dot{width:9px;height:9px;border-radius:50%;flex:none;background:#334;box-shadow:0 0 0 2px rgba(255,255,255,.08)}
+.friend-dot.on{background:#22c55e;box-shadow:0 0 8px rgba(34,197,94,.7)}
+.friend-name{flex:1;min-width:0;font-size:13px;font-weight:800;color:var(--text);display:flex;flex-direction:column}
+.friend-name em{font-style:normal;font-size:10px;font-weight:600;color:var(--dim)}
+.friend-acts{display:flex;gap:6px;flex:none}
+.friend-acts .btn-sm{min-width:34px;padding:4px 8px}
+
+.dm-log{flex:1;min-height:180px;max-height:34vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px;
+  background:rgba(3,16,28,.5);border:1px solid var(--line);border-radius:12px;padding:10px}
+.dm-msg{max-width:78%;padding:6px 10px;border-radius:12px;font-size:12.5px;line-height:1.4;word-break:break-word}
+.dm-msg .dm-name{display:block;font-size:9.5px;font-weight:800;opacity:.75;margin-bottom:1px}
+.dm-msg .dm-time{display:block;font-size:8.5px;opacity:.5;margin-top:2px;text-align:right}
+.dm-msg.in{align-self:flex-start;background:rgba(9,40,66,.8);border:1px solid var(--line);color:var(--text)}
+.dm-msg.out{align-self:flex-end;background:linear-gradient(180deg,#155,#0a3a33);border:1px solid #2e7d6b;color:#d8fff0}
+
+#dmPopup{position:fixed;right:10px;bottom:calc(var(--nav-h) + 12px + var(--safe-b));z-index:40;width:min(290px,86vw)}
+.dm-pop{background:rgba(6,36,60,.97);border:1px solid var(--gold);border-radius:12px;box-shadow:var(--shadow);
+  backdrop-filter:blur(8px);overflow:hidden;animation:toastIn .25s ease-out}
+.dm-pop-head{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;
+  border-bottom:1px solid var(--line);background:rgba(6,36,60,.6)}
+.dm-pop-head b{font-size:12.5px;color:var(--text)}
+.dm-pop-x{background:none;border:none;color:var(--dim);font-size:13px;cursor:pointer;padding:0 4px}
+.dm-pop-msg{font-size:12px;color:var(--text);padding:8px 10px;line-height:1.4}
+.dm-pop-acts{padding:0 10px 9px}
+

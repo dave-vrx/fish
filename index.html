@@ -29,6 +29,7 @@
     <button class="chip" id="chipCoins" onclick="UI.openInv()">💰 <span id="hudCoins">0</span></button>
     <button class="chip" id="chipIndex" onclick="UI.openIndex()">📖 <span id="hudIndex">0</span></button>
     <button class="chip icon-only" id="chipChat" onclick="Multi.toggle()" title="Harbor Chat">💬<span class="chat-unread hidden" id="chatUnread">0</span><span class="chat-online hidden" id="chatOnline">0</span></button>
+    <button class="chip icon-only" id="chipFriends" onclick="Social.openFriends()" title="Friends &amp; messages">👥<span class="chat-unread hidden" id="dmUnread">0</span></button>
     <button class="chip icon-only" id="chipWeather" title="Weather / time"><span id="hudWeather">🌤️</span><span id="hudTime">☀️</span></button>
     <button class="chip icon-only" id="chipMenu" onclick="UI.openHelp()">⚙️</button>
   </div>
@@ -97,6 +98,36 @@
 </nav>
 
 <div id="toasts"></div>
+<div id="dmPopup" class="hidden"></div>
+
+<!-- Friends -->
+<div class="veil hidden" id="veilFriends">
+  <div class="modal modal-wide">
+    <h1>👥 Friends</h1>
+    <p class="modal-sub">Add anglers by name, see them online and send private messages.</p>
+    <div class="code-row">
+      <input id="friendAdd" maxlength="16" placeholder="Angler name…" autocomplete="off">
+      <button class="btn-primary" onclick="Social.addFromInput()">➕ Add Friend</button>
+    </div>
+    <div class="friend-status" id="friendStatus"></div>
+    <div class="friend-list" id="friendList"><div class="lb-empty">Loading… 🌊</div></div>
+    <div class="modal-actions"><button class="btn-primary" onclick="Social.closeFriends()">Close</button></div>
+  </div>
+</div>
+
+<!-- Private message -->
+<div class="veil hidden" id="veilDm">
+  <div class="modal modal-wide">
+    <h1 id="dmHead">💬 Message</h1>
+    <div class="dm-log" id="dmLog"><div class="lb-empty">Loading… 🌊</div></div>
+    <div class="chat-bar">
+      <input id="dmInput" maxlength="240" placeholder="Type a private message… (Enter to send)" autocomplete="off">
+      <button id="dmSend" onclick="Social.sendFromInput()" aria-label="Send">➤</button>
+    </div>
+    <div class="modal-actions"><button class="btn-primary" onclick="Social.closeDm()">Close</button></div>
+  </div>
+</div>
+
 
 <!-- ================= MODALS ================= -->
 
@@ -258,7 +289,7 @@
     <div class="help-card"><span class="step-num">04</span><div><b>Sell fish</b><p>Open your inventory to sell fish for coins. Upgrade rods, lines &amp; bobbers at each island's shop.</p></div></div>
     <div class="help-card"><span class="step-num">05</span><div><b>Complete quests</b><p>Islanders want specific fish. Complete quests for coins, XP, titles and even boat unlocks!</p></div></div>
     <div class="help-card"><span class="step-num">06</span><div><b>The Altar</b><p>Off Crescent Isle, spend relics to enchant your rod. 200 pity points guarantee a Legendary.</p></div></div>
-    <div class="help-card"><span class="step-num">07</span><div><b>The Leviathan</b><p>Every even hour (UTC) a baby Leviathan appears. Catch its parts before it swims away!</p></div></div>
+    <div class="help-card"><span class="step-num">07</span><div><b>The Leviathan</b><p>Every even hour (UTC) a baby Leviathan appears in the open waters southwest of Tanglewood. Catch its parts quickly — it swims away after 10 minutes!</p></div></div>
     <div class="help-card"><span class="step-num">08</span><div><b>Codes &amp; titles</b><p>Redeem codes in the shop menu and unlock titles by catching, selling, leveling &amp; filling the index.</p></div></div>
     <div class="help-card"><span class="step-num">09</span><div><b>Multiplayer &amp; chat</b><p>You share the ocean with other anglers in real time — sail together and see their nameplates. Tap 💬 in the top bar to open Harbor Chat; messages pop up in bubbles over everyone's head.</p></div></div>
 
@@ -280,6 +311,8 @@
 <script src="world-data.js"></script>
 <script src="net.js"></script>
 <script src="multi.js"></script>
+<script src="sound.js"></script>
+<script src="social.js"></script>
 <script src="game.js"></script>
 <script src="ui.js"></script>
 </body>
