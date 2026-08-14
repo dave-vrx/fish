@@ -391,7 +391,7 @@ const UI = {
     for(const t of TITLES){
       const is = !!G.save.titles.done[t.name];
       html += '<div class="title-card'+(is?'':' locked')+'">'+
-        '<span class="t-title">'+escapeHtml(t.name)+'</span>'+
+        '<span class="t-title"'+(t.color?' style="color:'+escapeHtml(t.color)+'"':'')+'>'+escapeHtml(t.name)+'</span>'+
         '<span class="t-how">'+escapeHtml(t.how)+'</span>'+
         (is ? '<span class="t-earned">✔</span>' : '')+'</div>';
     }

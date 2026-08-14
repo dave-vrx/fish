@@ -1118,6 +1118,7 @@ function updateHud(){
   byId('hudCoins').textContent = fmt(save.coins);
   byId('hudName').textContent = (save.name || 'Angler').toUpperCase();
   byId('betaBadge').classList.toggle('hidden', !(save.badges&&save.badges.betaTester));
+  byId('pinkfongBadge').classList.toggle('hidden', !(save.badges&&save.badges.pinkfong));
   byId('hudLv').textContent = 'Lv'+save.level;
   byId('hudIndex').textContent = Object.keys(save.index).length;
   byId('hudWeather').textContent = (WEATHER_ICONS[G.state.weather]||'🌤️');
@@ -1848,6 +1849,17 @@ function drawBoatSprite(c, id, scale){
       c.fillStyle = '#fff4fb'; c.beginPath(); c.arc(2,-2,5,0,Math.PI*2); c.fill();
       c.fillStyle = '#4b1640'; c.beginPath(); c.arc(0,-3,1.35,0,Math.PI*2); c.arc(4,-3,1.35,0,Math.PI*2); c.fill(); c.fillRect(1,-.5,3,2);
       c.strokeStyle = '#ffd166'; c.lineWidth=1.4; c.beginPath(); c.moveTo(-12,2); c.lineTo(13,2); c.stroke();
+      break;
+    case 'pinkfong':
+      c.fillStyle = '#ff5bad';
+      c.beginPath(); c.moveTo(18,0); c.quadraticCurveTo(7,-11,-14,0); c.quadraticCurveTo(7,11,18,0); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = '#ff9ad1'; c.beginPath(); c.ellipse(3,-3,11,5,-.15,0,Math.PI*2); c.fill();
+      c.fillStyle = '#7e3cff'; c.beginPath(); c.moveTo(-6,-5); c.lineTo(-1,-15); c.lineTo(3,-5); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(4,-5); c.lineTo(9,-14); c.lineTo(12,-4); c.closePath(); c.fill();
+      c.fillStyle = '#fff'; c.beginPath(); c.ellipse(5,-5,7,5,0,0,Math.PI*2); c.fill();
+      c.fillStyle = '#2e1857'; c.beginPath(); c.arc(3,-5,1.3,0,Math.PI*2); c.arc(7,-5,1.3,0,Math.PI*2); c.fill();
+      c.fillStyle = '#ffd166'; c.beginPath(); c.arc(5,0,1.7,0,Math.PI*2); c.fill();
+      c.strokeStyle = '#ffe5f5'; c.lineWidth=1.4; c.beginPath(); c.moveTo(-12,2); c.lineTo(13,2); c.stroke();
       break;
     default:
       c.fillStyle = '#fff';
