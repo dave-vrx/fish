@@ -1119,6 +1119,7 @@ function updateHud(){
   byId('hudName').textContent = (save.name || 'Angler').toUpperCase();
   byId('betaBadge').classList.toggle('hidden', !(save.badges&&save.badges.betaTester));
   byId('pinkfongBadge').classList.toggle('hidden', !(save.badges&&save.badges.pinkfong));
+  byId('witchyBadge').classList.toggle('hidden', !(save.badges&&save.badges.witchy));
   byId('hudLv').textContent = 'Lv'+save.level;
   byId('hudIndex').textContent = Object.keys(save.index).length;
   byId('hudWeather').textContent = (WEATHER_ICONS[G.state.weather]||'🌤️');
@@ -1860,6 +1861,15 @@ function drawBoatSprite(c, id, scale){
       c.fillStyle = '#2e1857'; c.beginPath(); c.arc(3,-5,1.3,0,Math.PI*2); c.arc(7,-5,1.3,0,Math.PI*2); c.fill();
       c.fillStyle = '#ffd166'; c.beginPath(); c.arc(5,0,1.7,0,Math.PI*2); c.fill();
       c.strokeStyle = '#ffe5f5'; c.lineWidth=1.4; c.beginPath(); c.moveTo(-12,2); c.lineTo(13,2); c.stroke();
+      break;
+    case 'witchy':
+      c.fillStyle='#11111d';
+      c.beginPath(); c.moveTo(18,0); c.quadraticCurveTo(6,-12,-15,0); c.quadraticCurveTo(6,12,18,0); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle='#242238'; c.beginPath(); c.ellipse(2,-4,12,5,-.14,0,Math.PI*2); c.fill();
+      c.strokeStyle='#d9bd70'; c.lineWidth=1.4; c.beginPath(); c.moveTo(-11,3); c.lineTo(14,3); c.stroke();
+      c.fillStyle='#f5dc91'; c.beginPath(); c.arc(4,-5,4,0,Math.PI*2); c.fill();
+      c.fillStyle='#242238'; c.beginPath(); c.arc(6,-6,4,0,Math.PI*2); c.fill();
+      c.fillStyle='#d9bd70'; for(let i=0;i<3;i++){ c.beginPath(); c.arc(-4+i*5,-9-(i%2)*2,.8,0,Math.PI*2); c.fill(); }
       break;
     default:
       c.fillStyle = '#fff';

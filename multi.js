@@ -50,7 +50,7 @@ const Multi = (()=>{
       arr=arr.filter(p=>p&&p.id&&p.id!==pid()&&(now-(p.at||0))<STALE).slice(0,48);
       arr.push({ id:pid(), name:(G.save.name||'Angler').slice(0,16), color:myColor(),
         lvl:G.save.level||1, x:Math.round(G.boat.x), y:Math.round(G.boat.y),
-        head:Math.round(G.boat.head*100)/100, boat:save.boat, title:(activeTitle()||''), badges:{betaTester:!!(save.badges&&save.badges.betaTester),pinkfong:!!(save.badges&&save.badges.pinkfong)}, at:now });
+        head:Math.round(G.boat.head*100)/100, boat:save.boat, title:(activeTitle()||''), badges:{betaTester:!!(save.badges&&save.badges.betaTester),pinkfong:!!(save.badges&&save.badges.pinkfong),witchy:!!(save.badges&&save.badges.witchy)}, at:now });
       await fetch(PRES_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({players:arr,updated:now})});
     }catch(e){}
   }
@@ -68,14 +68,14 @@ const Multi = (()=>{
         let pl=players[p.id];
         if(!pl){
           pl={ id:p.id, name:p.name||'Angler', color:p.color||colorOf(p.id), lvl:p.lvl||1, boat:p.boat||'surf',
-            title:p.title||'', badges:p.badges||{betaTester:!!p.beta,pinkfong:false}, x:+(p.x||0), y:+(p.y||0), head:+(p.head||0),
+            title:p.title||'', badges:p.badges||{betaTester:!!p.beta,pinkfong:false,witchy:false}, x:+(p.x||0), y:+(p.y||0), head:+(p.head||0),
             tx:+(p.x||0), ty:+(p.y||0), th:+(p.head||0),
             chat:null, chatAt:0, at:now };
           players[p.id]=pl;
         }
         pl.tx=+(p.x||pl.tx); pl.ty=+(p.y||pl.ty); pl.th=+(p.head||pl.th);
         pl.name=p.name||pl.name; pl.lvl=p.lvl||pl.lvl; pl.boat=p.boat||pl.boat;
-        pl.title=p.title||pl.title; pl.badges=p.badges||{betaTester:!!p.beta,pinkfong:false}; pl.color=p.color||pl.color; pl.at=now;
+        pl.title=p.title||pl.title; pl.badges=p.badges||{betaTester:!!p.beta,pinkfong:false,witchy:false}; pl.color=p.color||pl.color; pl.at=now;
       }
       for(const id in players){ if(now-players[id].at>STALE+5000) delete players[id]; }
       online=Object.keys(players).length;
@@ -279,7 +279,7 @@ const Multi = (()=>{
       const tx=sx-tw/2, ty=sy-85;
       const titleMeta=TITLES.find(t=>t.name===title);
       const titleColor=(titleMeta&&titleMeta.color)||'#ffd166';
-      ctx.fillStyle=title==='PINKFONG!'?'rgba(86,17,74,.94)':'rgba(12,8,0,.92)';
+      ctx.fillStyle=title==='PINKFONG!'?'rgba(86,17,74,.94)':title==='WITCHY'?'rgba(12,10,23,.94)':'rgba(12,8,0,.92)';
       roundRect(tx,ty,tw,13,6.5); ctx.fill();
       ctx.strokeStyle=titleColor; ctx.lineWidth=1; ctx.stroke();
       ctx.fillStyle=titleColor;
@@ -305,6 +305,12 @@ const Multi = (()=>{
       ctx.fillStyle='#ff65b7'; ctx.strokeStyle='#ffe5f5'; ctx.lineWidth=1;
       ctx.beginPath(); ctx.arc(bx,y+2,6,0,Math.PI*2); ctx.fill(); ctx.stroke();
       ctx.fillStyle='#fff'; ctx.font='900 8px system-ui,sans-serif'; ctx.fillText('★',bx,y+2.3);
+    }
+    if(badges.witchy){
+      const bx=x+w-2+(badges.betaTester?14:0)+(badges.pinkfong?14:0);
+      ctx.fillStyle='#161423'; ctx.strokeStyle='#d9bd70'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.arc(bx,y+2,6,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='#f5dc91'; ctx.font='900 9px system-ui,sans-serif'; ctx.fillText('☾',bx,y+2.1);
     }
     ctx.restore();
   }
