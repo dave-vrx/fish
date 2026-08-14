@@ -62,7 +62,8 @@ const BOATS = [
   { id:'galleon',    name:'Galleon',          emoji:'⛴️', cost:8000000,  tier:3, seats:11, speed:2, accel:2, tough:1,  boost:0.5, unlock:'quest_galleon' },
   { id:'skull',      name:'Skullcrusher',     emoji:'💀', cost:0,        tier:5, seats:4,  speed:4, accel:4, tough:2.5,boost:5, src:'Secret code: SKULL', unlock:'code_skull' },
   { id:'pinkfong',   name:'Pinkfong Cruiser', emoji:'🦊', cost:0,        tier:5, seats:4,  speed:4, accel:4, tough:2.5,boost:5, src:'Secret code: PINKFONG', unlock:'code_pinkfong' },
-  { id:'witchy',     name:'Moonlit Vessel',   emoji:'☾', cost:0,        tier:5, seats:4,  speed:4, accel:4, tough:2.5,boost:5, src:'Secret code: WITCHY', unlock:'code_witchy' }
+  { id:'witchy',     name:'Moonlit Vessel',   emoji:'☾', cost:0,        tier:5, seats:4,  speed:4, accel:4, tough:2.5,boost:5, src:'Secret code: WITCHY', unlock:'code_witchy' },
+  { id:'davetest',   name:'Golden Beta Skiff', emoji:'💛', cost:0,       tier:5, seats:4,  speed:4, accel:4, tough:2.5,boost:5, src:'Secret code: DAVETEST', unlock:'code_davetest' }
 ];
 
 /* Enchantments (name, rarity, special, luck, str, exp, att, big, maxW, xp%) */

@@ -72,7 +72,8 @@ const CODES = [
   { code:'MAKESHIP',  reward:'Vlad Autopet',                     active:false, items:{autopet:'vlad'} },
   { code:'SKULL',     reward:'Skullcrusher boat + BETA TESTER title', active:true, hidden:true, boats:['skull'], titles:['BETA TESTER'], badges:['betaTester'] },
   { code:'PINKFONG',  reward:'Pinkfong boat + PINKFONG! title', active:true, hidden:true, boats:['pinkfong'], titles:['PINKFONG!'], badges:['pinkfong'] },
-  { code:'WITCHY',    reward:'Moonlit boat + WITCHY title', active:true, hidden:true, boats:['witchy'], titles:['WITCHY'], badges:['witchy'] }
+  { code:'WITCHY',    reward:'Moonlit boat + WITCHY title', active:true, hidden:true, boats:['witchy'], titles:['WITCHY'], badges:['witchy'] },
+  { code:'DAVETEST',  reward:'Golden Beta Skiff + BETA TESTER title', active:true, hidden:true, boats:['davetest'], titles:['BETA TESTER'], badges:['daveTest'] }
 ];
 
 /* Autopets — auto-sell your catches (toggle in Menu) */
