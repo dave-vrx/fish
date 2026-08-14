@@ -334,7 +334,7 @@ const Multi = (()=>{
       if(sx<-90||sx>W+90||sy<-160||sy>H+70) continue;
       drawTag(sx,sy,p.name,p.lvl,p.color, (now-p.chatAt<BUBBLE_MS)?p.chat:null, p.title, p.badges);
     }
-    if(G.save.name){
+    if(G.save.name && !G.player.onFoot){
       const actor=G.player.onFoot?G.player:G.boat;
       const mine=worldToScreen(actor.x,actor.y), mx=mine.x, my=mine.y;
       if(mx>-90&&mx<W+90&&my>-160&&my<H+70){

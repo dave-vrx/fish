@@ -1249,7 +1249,7 @@ const THEME = {
   twilight:{ water:'#3b2f6e', sand:'#5c4a8f', land:'#4a3a78', dark:'#2f2452', decor:'#c58cff', halo:'#7a6fd0' },
   rock:{ water:'#1f7fc2', sand:'#8f8f8f', land:'#6a6a6a', dark:'#4a4a4a', decor:'#b8f2ff', halo:'#79c8ea' }
 };
-const WORLD_Y_SCALE=0.64, CAMERA_YAW=-0.28;
+const WORLD_Y_SCALE=0.56, CAMERA_YAW=-0.42;
 function applyWorldTransform(c){
   const z=G.cam.zoom;
   c.translate(W/2,H/2);
@@ -1700,7 +1700,7 @@ function drawIslands(){
     ctx.fillStyle = halo;
     ctx.beginPath(); ctx.arc(isl.x, isl.y, r*1.8, 0, Math.PI*2); ctx.fill();
     /* elevated shoreline: stacked lower slices make each island sit above the sea */
-    for(let depth=14;depth>=3;depth-=3){
+    for(let depth=30;depth>=4;depth-=4){
       islPolyPath(isl.x, isl.y+depth, pts, 0.62);
       ctx.fillStyle='rgba(2,24,36,'+(0.10+depth*.008)+')'; ctx.fill();
     }
@@ -2021,19 +2021,18 @@ function drawBoat(){
   ctx.fillStyle = 'rgba(0,10,20,.18)';
   ctx.beginPath(); ctx.ellipse(2, 3, 16, 10, 0, 0, Math.PI*2); ctx.fill();
   drawBoatSprite(ctx, save.boat, 1);
-  if(G.player.onFoot){
-    const p=G.player;
-    const walking=Math.hypot(G.input.x,G.input.y)>0.02||G.input.joyMag>.02;
-    const bob=walking?Math.sin(G.frame*.36)*1.5:0;
-    ctx.save(); ctx.translate(p.x-b.x,p.y-b.y+bob); ctx.rotate(p.head+Math.PI/2); ctx.scale(1.55,1.55);
-    ctx.fillStyle='rgba(0,10,20,.28)'; ctx.beginPath(); ctx.ellipse(0,8,7,3,0,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='#f0c8a0'; ctx.beginPath(); ctx.arc(0,-7,4.4,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='#ffcf5e'; ctx.fillRect(-4.8,-2,9.6,10);
-    ctx.fillStyle='#163754'; ctx.fillRect(-4.5,7,3.2,walking?4:5); ctx.fillRect(1.3,7,3.2,walking?5:4);
-    ctx.fillStyle='#0d2134'; ctx.beginPath(); ctx.arc(-1.5,-7.5,.8,0,Math.PI*2); ctx.arc(1.5,-7.5,.8,0,Math.PI*2); ctx.fill();
-    ctx.restore();
-  }
   ctx.restore();
+}
+function updateLandAvatar(){
+  const el=byId('landAvatar');
+  if(!G.player.onFoot){ el.classList.add('hidden'); return; }
+  const p=worldToScreen(G.player.x,G.player.y);
+  el.style.left=p.x+'px'; el.style.top=(p.y+18)+'px'; el.classList.remove('hidden');
+  byId('landName').textContent=(save.name||'Angler')+' · Lv'+save.level;
+  const title=activeTitle()||'';
+  const meta=TITLES.find(t=>t.name===title);
+  byId('landTitle').textContent=title;
+  byId('landTitle').style.color=(meta&&meta.color)||'#ffd166';
 }
 
 function drawOverlays(){
@@ -2172,6 +2171,7 @@ function loop(t){
   drawOcean();
   drawIslands();
   drawBoat();
+  updateLandAvatar();
   drawOverlays();
   Multi.draw();
   Multi.tick(delta);
