@@ -19,7 +19,8 @@ input{font-family:inherit}
 .hidden{display:none !important}
 
 /* ============ WORLD CANVAS ============ */
-#world{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:0}
+#world3d{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:0;background:#082941}
+#world{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:1;pointer-events:none}
 
 #minimapWrap{
   position:fixed;top:calc(56px + env(safe-area-inset-top,0px));left:10px;z-index:5;

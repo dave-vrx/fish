@@ -1326,6 +1326,7 @@ function resize(){
 window.addEventListener('resize', resize);
 
 function drawOcean(){
+  if(window.World3D&&World3D.active){ ctx.clearRect(0,0,W,H); return; }
   const g = ctx.createLinearGradient(0,0,W,H);
   g.addColorStop(0,'#163f5d');
   g.addColorStop(0.42,'#0b4b78');
@@ -1538,6 +1539,8 @@ function drawSign(isl){
 function updateIslandSigns(){
   const layer=byId('islandSignLayer');
   if(!layer) return;
+  if(window.World3D&&World3D.active){ layer.classList.add('hidden'); return; }
+  layer.classList.remove('hidden');
   if(!layer.children.length){
     ISLANDS.forEach(isl=>{
       const sign=document.createElement('div'); sign.className='island-sign'; sign.dataset.island=isl.id;
@@ -1800,6 +1803,7 @@ function drawPoolFX(p, i){
 }
 
 function drawIslands(){
+  if(window.World3D&&World3D.active) return;
   ctx.save();
   applyWorldTransform(ctx);
   const view = worldViewport();
@@ -2163,6 +2167,7 @@ function drawBoatSprite(c, id, scale){
 }
 
 function drawBoat(){
+  if(window.World3D&&World3D.active) return;
   ctx.save();
   applyWorldTransform(ctx);
   const b = G.boat;
@@ -2229,6 +2234,7 @@ function drawBoat(){
 }
 function updateLandAvatar(){
   const el=byId('landAvatar');
+  if(window.World3D&&World3D.active){ el.classList.add('hidden'); return; }
   if(!G.player.onFoot){ el.classList.add('hidden'); return; }
   const p=worldToScreen(G.player.x,G.player.y);
   el.style.left=p.x+'px'; el.style.top=(p.y+5)+'px'; el.classList.remove('hidden');
