@@ -61,7 +61,8 @@ const TITLES = [
   { name:'Transporter',        how:'Complete Sunleaf Delivery',  type:'quest', q:'sunleaf' },
   { name:'BETA TESTER',        how:'Redeem the secret SKULL code', type:'code', bonus:true, color:'#ffd166' },
   { name:'PINKFONG!',          how:'Redeem the secret PINKFONG code', type:'code', bonus:true, color:'#ff65b7' },
-  { name:'WITCHY',             how:'Redeem the secret WITCHY code', type:'code', bonus:true, color:'#d9bd70' }
+  { name:'WITCHY',             how:'Redeem the secret WITCHY code', type:'code', bonus:true, color:'#d9bd70' },
+  { name:'CREATOR',            how:'Redeem the secret DAVEVR code', type:'code', bonus:true, color:'#ffffff', size:'large' }
 ];
 
 const CODES = [
@@ -73,7 +74,8 @@ const CODES = [
   { code:'SKULL',     reward:'Skullcrusher boat + BETA TESTER title', active:true, hidden:true, boats:['skull'], titles:['BETA TESTER'], badges:['betaTester'] },
   { code:'PINKFONG',  reward:'Pinkfong boat + PINKFONG! title', active:true, hidden:true, boats:['pinkfong'], titles:['PINKFONG!'], badges:['pinkfong'] },
   { code:'WITCHY',    reward:'Moonlit boat + WITCHY title', active:true, hidden:true, boats:['witchy'], titles:['WITCHY'], badges:['witchy'] },
-  { code:'DAVETEST',  reward:'Golden Beta Skiff + BETA TESTER title', active:true, hidden:true, boats:['davetest'], titles:['BETA TESTER'], badges:['daveTest'] }
+  { code:'DAVETEST',  reward:'Golden Beta Skiff + BETA TESTER title', active:true, hidden:true, boats:['davetest'], titles:['BETA TESTER'], badges:['daveTest'] },
+  { code:'DAVEVR',    reward:'Creator yacht + CREATOR title', active:true, hidden:true, boats:['creator'], titles:['CREATOR'], badges:['creator'], equipTitle:'CREATOR', avatar:{gender:'male',skin:'fair',hair:'long',hairColor:'blonde',outfit:'gold',special:'creator'} }
 ];
 
 /* Autopets — auto-sell your catches (toggle in Menu) */

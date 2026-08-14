@@ -915,6 +915,8 @@ function redeemCode(code){
   }
   for(const title of (c.titles||[])) grantTitle(title, true);
   for(const badge of (c.badges||[])) save.badges[badge]=true;
+  if(c.avatar) save.avatar=Object.assign({gender:'female',skin:'warm',hair:'long',hairColor:'brown',outfit:'teal'},save.avatar||{},c.avatar);
+  if(c.equipTitle && save.titles.done[c.equipTitle]) save.selectedTitle=c.equipTitle;
   persist();
   toast('🎟️ Code redeemed: '+c.reward+'!', 'gold');
   UI.refreshCodes();
@@ -1210,6 +1212,7 @@ function updateHud(){
   byId('hudName').textContent = (save.name || 'Angler').toUpperCase();
   byId('betaBadge').classList.toggle('hidden', !(save.badges&&save.badges.betaTester));
   byId('davetestBadge').classList.toggle('hidden', !(save.badges&&save.badges.daveTest));
+  byId('creatorBadge').classList.toggle('hidden', !(save.badges&&save.badges.creator));
   byId('pinkfongBadge').classList.toggle('hidden', !(save.badges&&save.badges.pinkfong));
   byId('witchyBadge').classList.toggle('hidden', !(save.badges&&save.badges.witchy));
   byId('hudLv').textContent = 'Lv'+save.level;
@@ -2092,6 +2095,16 @@ function drawBoatSprite(c, id, scale){
       c.fillStyle='#ffe066'; c.beginPath(); c.moveTo(-7,-10); c.lineTo(-4,-16); c.lineTo(-1,-10); c.closePath(); c.fill();
       c.strokeStyle='#fff3a0'; c.lineWidth=1.3; c.beginPath(); c.moveTo(-9,2); c.lineTo(12,2); c.stroke();
       break;
+    case 'creator':
+      c.fillStyle='#9aa6b2'; c.beginPath(); c.moveTo(22,1); c.quadraticCurveTo(8,-15,-20,0); c.quadraticCurveTo(6,15,22,1); c.closePath(); c.fill(); c.stroke();
+      const yachtWhite=c.createLinearGradient(-18,-11,20,12); yachtWhite.addColorStop(0,'#ffffff'); yachtWhite.addColorStop(.5,'#e7f4ff'); yachtWhite.addColorStop(1,'#9db4c8');
+      c.fillStyle=yachtWhite; c.beginPath(); c.moveTo(21,0); c.quadraticCurveTo(8,-10,-17,0); c.quadraticCurveTo(5,9,21,0); c.closePath(); c.fill();
+      c.fillStyle='#dceefa'; c.beginPath(); c.moveTo(-4,-14); c.lineTo(10,-14); c.lineTo(15,-3); c.lineTo(-8,-3); c.closePath(); c.fill();
+      c.fillStyle='#4c7c9d'; c.fillRect(-2,-12,6,5); c.fillRect(6,-12,5,5);
+      c.strokeStyle='#d4a927'; c.lineWidth=1.5; c.beginPath(); c.moveTo(-14,2); c.lineTo(17,2); c.stroke();
+      c.fillStyle='#284158'; c.font='900 4.8px system-ui,sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.fillText('DAVEVR',2,5);
+      c.fillStyle='#fff'; c.beginPath(); c.arc(2,-7,2.3,0,Math.PI*2); c.fill();
+      break;
     default:
       c.fillStyle = '#fff';
       c.beginPath(); c.moveTo(16,0); c.quadraticCurveTo(4,-11,-14,0); c.quadraticCurveTo(4,11,16,0); c.closePath(); c.fill(); c.stroke();
@@ -2158,6 +2171,7 @@ function updateLandAvatar(){
   const meta=TITLES.find(t=>t.name===title);
   byId('landTitle').textContent=title;
   byId('landTitle').style.color=(meta&&meta.color)||'#ffd166';
+  byId('landTitle').classList.toggle('creator-title', !!(meta&&meta.size==='large'));
   applyAvatarLook(byId('landWalker'));
 }
 
@@ -2169,6 +2183,7 @@ function applyAvatarLook(el){
   const outfits={teal:'#2fc3c9',coral:'#ff766b',violet:'#8e72ee',gold:'#e7b94d',navy:'#37689b'};
   el.dataset.gender=a.gender;
   el.dataset.hair=a.hair;
+  el.dataset.special=a.special||'';
   el.style.setProperty('--skin', skins[a.skin]||skins.warm);
   el.style.setProperty('--hair', hairs[a.hairColor]||hairs.brown);
   el.style.setProperty('--outfit', outfits[a.outfit]||outfits.teal);
