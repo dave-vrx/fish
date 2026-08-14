@@ -1852,15 +1852,20 @@ function drawBoatSprite(c, id, scale){
       c.strokeStyle = '#ffd166'; c.lineWidth=1.4; c.beginPath(); c.moveTo(-12,2); c.lineTo(13,2); c.stroke();
       break;
     case 'pinkfong':
-      c.fillStyle = '#ff5bad';
-      c.beginPath(); c.moveTo(18,0); c.quadraticCurveTo(7,-11,-14,0); c.quadraticCurveTo(7,11,18,0); c.closePath(); c.fill(); c.stroke();
-      c.fillStyle = '#ff9ad1'; c.beginPath(); c.ellipse(3,-3,11,5,-.15,0,Math.PI*2); c.fill();
-      c.fillStyle = '#7e3cff'; c.beginPath(); c.moveTo(-6,-5); c.lineTo(-1,-15); c.lineTo(3,-5); c.closePath(); c.fill();
-      c.beginPath(); c.moveTo(4,-5); c.lineTo(9,-14); c.lineTo(12,-4); c.closePath(); c.fill();
-      c.fillStyle = '#fff'; c.beginPath(); c.ellipse(5,-5,7,5,0,0,Math.PI*2); c.fill();
-      c.fillStyle = '#2e1857'; c.beginPath(); c.arc(3,-5,1.3,0,Math.PI*2); c.arc(7,-5,1.3,0,Math.PI*2); c.fill();
-      c.fillStyle = '#ffd166'; c.beginPath(); c.arc(5,0,1.7,0,Math.PI*2); c.fill();
-      c.strokeStyle = '#ffe5f5'; c.lineWidth=1.4; c.beginPath(); c.moveTo(-12,2); c.lineTo(13,2); c.stroke();
+      /* Pink fox character boat: the head and ears are the silhouette, not a decal. */
+      c.fillStyle='#f83da1';
+      c.beginPath(); c.moveTo(17,4); c.quadraticCurveTo(8,13,-12,8); c.quadraticCurveTo(-17,4,-14,0); c.quadraticCurveTo(-8,-3,13,-2); c.quadraticCurveTo(18,0,17,4); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle='#ff6fba'; c.beginPath(); c.ellipse(1,-4,12,10,-.1,0,Math.PI*2); c.fill(); c.stroke();
+      c.fillStyle='#7c3dd7';
+      c.beginPath(); c.moveTo(-7,-9); c.lineTo(-5,-21); c.lineTo(1,-11); c.closePath(); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(5,-11); c.lineTo(10,-21); c.lineTo(13,-8); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle='#ffd2e9';
+      c.beginPath(); c.ellipse(5,0,8,5,0,0,Math.PI*2); c.fill();
+      c.fillStyle='#fff'; c.beginPath(); c.ellipse(-1,-6,4,3.6,0,0,Math.PI*2); c.ellipse(8,-6,4,3.6,0,0,Math.PI*2); c.fill();
+      c.fillStyle='#302053'; c.beginPath(); c.arc(0,-6,1.4,0,Math.PI*2); c.arc(7,-6,1.4,0,Math.PI*2); c.fill();
+      c.fillStyle='#6d2a75'; c.beginPath(); c.arc(4,-.5,1.8,0,Math.PI*2); c.fill();
+      c.strokeStyle='#fff0fa'; c.lineWidth=1.25; c.beginPath(); c.moveTo(5,2); c.quadraticCurveTo(8,5,11,2); c.stroke();
+      c.fillStyle='#ffd166'; c.beginPath(); c.arc(-9,2,1.5,0,Math.PI*2); c.arc(-5,5,1.1,0,Math.PI*2); c.fill();
       break;
     case 'witchy':
       c.fillStyle='#11111d';
