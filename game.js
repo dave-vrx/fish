@@ -1282,33 +1282,41 @@ function resize(){
 window.addEventListener('resize', resize);
 
 function drawOcean(){
-  const g = ctx.createLinearGradient(0,0,0,H);
-  g.addColorStop(0,'#0a2c4a');
-  g.addColorStop(0.5,'#0d3f6b');
-  g.addColorStop(1,'#07243f');
+  const g = ctx.createLinearGradient(0,0,W,H);
+  g.addColorStop(0,'#163f5d');
+  g.addColorStop(0.42,'#0b4b78');
+  g.addColorStop(1,'#041f3b');
   ctx.fillStyle = g;
   ctx.fillRect(0,0,W,H);
+  /* A large, moving specular reflection sits above the world plane. */
+  const sunX=W*(.22+.06*Math.sin(G.frame*.003)), sunY=H*.08;
+  const sheen=ctx.createRadialGradient(sunX,sunY,0,sunX,sunY,Math.max(W,H)*.72);
+  sheen.addColorStop(0,'rgba(173,235,255,.18)'); sheen.addColorStop(.36,'rgba(94,200,255,.055)'); sheen.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=sheen; ctx.fillRect(0,0,W,H);
   ctx.save();
   applyWorldTransform(ctx);
   const v=worldViewport(); const vx=v.x, vy=v.y, vw=v.w, vh=v.h;
-  const spacing = 64;
-  const offY = (G.frame*7) % spacing;
+  const spacing = 72;
+  const offY = (G.frame*4.5) % spacing;
   const xS = Math.floor(vx/spacing)*spacing, yS = Math.floor(vy/spacing)*spacing;
   for(let y = yS - spacing; y < vy + vh + spacing; y += spacing){
     const yy = y + offY;
     for(let x = xS - spacing; x < vx + vw + spacing; x += spacing){
-      const a = 0.05 + 0.035*Math.sin((x*0.02) + (y*0.03) + G.frame*0.03);
-      ctx.fillStyle = 'rgba(150,205,255,'+a+')';
-      const wob = Math.sin((y + G.frame*0.4)*0.04 + x*0.01)*7;
-      ctx.fillRect(x + wob, yy, 24, 2);
-      ctx.fillRect(x + 40 - wob, yy + 26, 16, 1.5);
+      const phase=x*.018+y*.026+G.frame*.035;
+      const a = 0.035 + 0.045*(.5+.5*Math.sin(phase));
+      const wob = Math.sin(phase)*9 + Math.cos(y*.035-G.frame*.022)*4;
+      ctx.strokeStyle = 'rgba(190,238,255,'+a+')'; ctx.lineWidth=1.2;
+      ctx.beginPath(); ctx.moveTo(x-12+wob,yy); ctx.quadraticCurveTo(x+12+wob,yy-3,x+35+wob,yy+.5); ctx.stroke();
+      if((x/spacing+y/spacing)%2===0){
+        ctx.strokeStyle='rgba(30,117,164,.20)'; ctx.beginPath(); ctx.moveTo(x+30-wob,yy+27); ctx.quadraticCurveTo(x+48-wob,yy+30,x+66-wob,yy+27); ctx.stroke();
+      }
     }
   }
   /* broad, slow-moving caustics give the water a layered depth rather than a flat grid */
-  for(let i=0;i<18;i++){
-    const x=vx+((i*173+G.frame*0.8)%vw), y=vy+((i*97+G.frame*.32)%vh);
-    const glow=ctx.createRadialGradient(x,y,0,x,y,58);
-    glow.addColorStop(0,'rgba(115,220,255,.09)'); glow.addColorStop(1,'rgba(115,220,255,0)');
+  for(let i=0;i<24;i++){
+    const x=vx+((i*173+G.frame*.8)%vw), y=vy+((i*97+G.frame*.32)%vh);
+    const glow=ctx.createRadialGradient(x,y,0,x,y,72);
+    glow.addColorStop(0,'rgba(142,231,255,.11)'); glow.addColorStop(.38,'rgba(70,175,230,.045)'); glow.addColorStop(1,'rgba(115,220,255,0)');
     ctx.fillStyle=glow; ctx.beginPath(); ctx.ellipse(x,y,58,18,Math.sin(i+G.frame*.01)*.25,0,Math.PI*2); ctx.fill();
   }
   G.sparkles.forEach(s => {
@@ -1330,9 +1338,11 @@ function islPolyPath(x, y, pts, sc){
 function drawPalm(x, y, s, a){
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.rotate(a);
   ctx.fillStyle = 'rgba(0,10,20,.15)';
-  ctx.beginPath(); ctx.ellipse(2, 2, 9, 3.4, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(4, 3, 12, 4, -.18, 0, 0, Math.PI*2); ctx.fill();
   ctx.strokeStyle = '#7a5426'; ctx.lineWidth = 3;
   ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(3,-9, -1,-17); ctx.stroke();
+  ctx.strokeStyle = '#bd8240'; ctx.lineWidth = .85;
+  ctx.beginPath(); ctx.moveTo(-.5,-1); ctx.quadraticCurveTo(2,-9,-.5,-16); ctx.stroke();
   ctx.strokeStyle = '#5f421e'; ctx.lineWidth = 1.6;
   ctx.beginPath(); ctx.moveTo(-1,-8); ctx.quadraticCurveTo(1,-11,0,-15); ctx.stroke();
   ctx.fillStyle = '#8a5a2a';
@@ -1342,6 +1352,13 @@ function drawPalm(x, y, s, a){
     const ang = -Math.PI + f*Math.PI/3;
     ctx.save(); ctx.translate(0,-17); ctx.rotate(ang);
     ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(9,-3, 13,2); ctx.quadraticCurveTo(8,5,0,2); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  ctx.fillStyle = '#43a34c';
+  for(let f = 0; f < 5; f++){
+    const ang = -Math.PI + f*Math.PI/2.55 + .12;
+    ctx.save(); ctx.translate(0,-17); ctx.rotate(ang);
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(7,-2,10,1); ctx.quadraticCurveTo(6,2.8,0,1.3); ctx.closePath(); ctx.fill();
     ctx.restore();
   }
   ctx.fillStyle = '#1b5e20';
@@ -1705,14 +1722,18 @@ function drawIslands(){
     halo.addColorStop(1, 'rgba(90,190,235,0)');
     ctx.fillStyle = halo;
     ctx.beginPath(); ctx.arc(isl.x, isl.y, r*1.8, 0, Math.PI*2); ctx.fill();
-    /* elevated shoreline: stacked lower slices make each island sit above the sea */
+    /* A solid vertical cliff edge makes every island feel raised above the sea plane. */
     for(let depth=30;depth>=4;depth-=4){
       islPolyPath(isl.x, isl.y+depth, pts, 0.62);
-      ctx.fillStyle='rgba(2,24,36,'+(0.10+depth*.008)+')'; ctx.fill();
+      ctx.fillStyle=depth>18?th.dark:'rgba(7,42,56,.62)'; ctx.globalAlpha=.18+depth*.012; ctx.fill();
     }
+    ctx.globalAlpha=1;
     /* sand beach */
     islPolyPath(isl.x, isl.y, pts, 0.62);
-    ctx.fillStyle = th.sand;
+    const beach=ctx.createLinearGradient(isl.x-r*.45,isl.y-r*.5,isl.x+r*.5,isl.y+r*.6);
+    const sunlitBeach=(isl.theme==='tropical'||isl.theme==='desert') ? '#fff1bb' : th.sand;
+    beach.addColorStop(0,sunlitBeach); beach.addColorStop(.28,th.sand); beach.addColorStop(1,th.dark);
+    ctx.fillStyle = beach;
     ctx.fill();
     ctx.lineWidth = 2.4;
     ctx.strokeStyle = 'rgba(255,255,255,'+(0.30 + 0.10*Math.sin(G.frame*0.05 + i))+')';
@@ -1724,6 +1745,11 @@ function drawIslands(){
     lg.addColorStop(0, th.land); lg.addColorStop(1, th.dark);
     ctx.fillStyle = lg;
     ctx.fill();
+    /* Contour rings and terrain highlights sell a shallow, climbable plateau. */
+    ctx.strokeStyle='rgba(255,255,255,.14)'; ctx.lineWidth=1.5;
+    islPolyPath(isl.x-r*.02,isl.y-r*.06,pts,.31); ctx.stroke();
+    ctx.strokeStyle='rgba(0,24,20,.22)'; ctx.lineWidth=2;
+    islPolyPath(isl.x+r*.02,isl.y+r*.055,pts,.35); ctx.stroke();
     ctx.fillStyle='rgba(255,255,255,.055)';
     for(let g=0;g<7;g++){
       const gx=isl.x+Math.sin(g*19+i*7)*r*.27, gy=isl.y+Math.cos(g*13+i*5)*r*.22;
@@ -1733,10 +1759,13 @@ function drawIslands(){
     ctx.strokeStyle = 'rgba(0,0,0,.25)';
     islPolyPath(isl.x, isl.y, pts, 0.40);
     ctx.stroke();
-    /* raised hill */
+    /* raised hill with a soft overhead highlight */
     islPolyPath(isl.x, isl.y, pts, 0.22);
     ctx.fillStyle = th.dark;
     ctx.fill();
+    const hill=ctx.createRadialGradient(isl.x-r*.09,isl.y-r*.17,2,isl.x,isl.y,r*.26);
+    hill.addColorStop(0,'rgba(255,255,225,.24)'); hill.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=hill; ctx.beginPath(); ctx.arc(isl.x,isl.y,r*.27,0,Math.PI*2); ctx.fill();
     if(isl.theme === 'volcanic'){
       const cx = isl.x, cy = isl.y - r*0.10;
       const gl = ctx.createRadialGradient(cx, cy, 2, cx, cy, r*0.6);
