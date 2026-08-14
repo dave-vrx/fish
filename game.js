@@ -1704,7 +1704,11 @@ function drawIslands(){
   });
 
   const lv = leviStatus();
-  if(lv.active) drawBabyLeviathan(LEVIATHAN_SPOT, leviHealth());
+  if(lv.active){
+    /* The event is decorative; a rendering fault must never stop the ocean. */
+    try{ drawBabyLeviathan(LEVIATHAN_SPOT, leviHealth()); }
+    catch(e){ console.error('Baby Leviathan render failed:', e); }
+  }
   ctx.restore();
 }
 
@@ -1721,6 +1725,7 @@ function drawBabyLeviathan(s, health){
   const pulse=.55+.45*Math.sin(t*2.4);
 
   ctx.save();
+  try{
   ctx.fillStyle='rgba(10,9,30,.48)';
   ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
   ctx.strokeStyle='rgba(255,91,114,'+(.55+pulse*.3)+')'; ctx.lineWidth=3;
@@ -1746,7 +1751,7 @@ function drawBabyLeviathan(s, health){
   ctx.beginPath(); ctx.arc(40,-8,4,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
   ctx.fillStyle='#c9dcff';
   for(let i=0;i<5;i++){ const fx=19+i*8; ctx.beginPath(); ctx.moveTo(fx,17); ctx.lineTo(fx+4,24); ctx.lineTo(fx+7,17); ctx.closePath(); ctx.fill(); }
-  ctx.restore();
+  } finally { ctx.restore(); }
 
   const w=156,h=10,barY=y-68,ratio=health.hp/health.maxHp;
   ctx.fillStyle='rgba(3,9,22,.9)'; leviRoundRect(x-w/2-4,barY-21,w+8,29,7); ctx.fill();
