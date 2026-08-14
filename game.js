@@ -66,6 +66,7 @@ function loadSave(){
     save.stats = Object.assign({totalCaught:0,totalSold:0,perfect:0,big:0,maxWt:0,bounties:0}, raw.stats||{});
     save.badges = Object.assign({}, raw.badges||{});
     save.avatar = Object.assign({gender:'female', skin:'warm', hair:'long', hairColor:'brown', outfit:'teal'}, raw.avatar||{});
+    if(raw.codes&&raw.codes.WITCHY&&!save.avatar.special) save.avatar=Object.assign(save.avatar,{gender:'female',hair:'long',hairColor:'black',outfit:'violet',special:'witchy'});
   }
 }
 function persist(){
@@ -91,7 +92,7 @@ const G = {
   fish: { state:'idle', pool:null, t:0, biteAt:0, game:null, catch:null },
   effects: [], sparkles: [],
   blockedIsland: null,
-  saveTimer: 0, hudTimer: 0, mmTimer: 0, leviSyncTimer: 0, pinkTrailTimer: 0, betaTrailTimer: 0, betaTrailIndex: 0, weatherDur: 0,
+  saveTimer: 0, hudTimer: 0, mmTimer: 0, leviSyncTimer: 0, pinkTrailTimer: 0, witchTrailTimer: 0, betaTrailTimer: 0, betaTrailIndex: 0, weatherDur: 0,
   frame: 0
 };
 const Fishing = { lastBiteCheck:0, held:false, lastStatus:'' };
@@ -1102,6 +1103,15 @@ function updateBoat(dt){
       if(typeof Sound !== 'undefined') Sound.pinkTrail();
     }
   } else G.pinkTrailTimer=0;
+  if(save.boat === 'witchy' && Math.abs(b.speed) > 10){
+    G.witchTrailTimer+=dt;
+    if(G.witchTrailTimer>=.18){
+      G.witchTrailTimer=0;
+      const side=(Math.random()-.5)*16;
+      G.effects.push({type:'witchMote',x:b.x-Math.sin(b.head)*18+Math.cos(b.head)*side,y:b.y+Math.cos(b.head)*18+Math.sin(b.head)*side,t:0,phase:Math.random()*Math.PI*2});
+      if(typeof Sound!=='undefined') Sound.witchTrail();
+    }
+  }else G.witchTrailTimer=0;
   if(save.boat === 'davetest' && Math.abs(b.speed) > 10){
     G.betaTrailTimer += dt;
     if(G.betaTrailTimer >= 0.13){
@@ -2077,13 +2087,14 @@ function drawBoatSprite(c, id, scale){
       c.fillStyle='#ffd166'; c.beginPath(); c.arc(-9,2,1.5,0,Math.PI*2); c.arc(-5,5,1.1,0,Math.PI*2); c.fill();
       break;
     case 'witchy':
-      c.fillStyle='#11111d';
-      c.beginPath(); c.moveTo(18,0); c.quadraticCurveTo(6,-12,-15,0); c.quadraticCurveTo(6,12,18,0); c.closePath(); c.fill(); c.stroke();
-      c.fillStyle='#242238'; c.beginPath(); c.ellipse(2,-4,12,5,-.14,0,Math.PI*2); c.fill();
-      c.strokeStyle='#d9bd70'; c.lineWidth=1.4; c.beginPath(); c.moveTo(-11,3); c.lineTo(14,3); c.stroke();
-      c.fillStyle='#f5dc91'; c.beginPath(); c.arc(4,-5,4,0,Math.PI*2); c.fill();
-      c.fillStyle='#242238'; c.beginPath(); c.arc(6,-6,4,0,Math.PI*2); c.fill();
-      c.fillStyle='#d9bd70'; for(let i=0;i<3;i++){ c.beginPath(); c.arc(-4+i*5,-9-(i%2)*2,.8,0,Math.PI*2); c.fill(); }
+      c.shadowColor='#8262cc'; c.shadowBlur=14;
+      c.fillStyle='#0a0914'; c.beginPath(); c.moveTo(27,0); c.quadraticCurveTo(9,-17,-24,0); c.quadraticCurveTo(8,17,27,0); c.closePath(); c.fill(); c.stroke(); c.shadowBlur=0;
+      c.fillStyle='#242038'; c.beginPath(); c.ellipse(3,-5,18,7,-.14,0,Math.PI*2); c.fill();
+      c.fillStyle='#12101d'; c.beginPath(); c.moveTo(-6,-5); c.lineTo(0,-24); c.lineTo(7,-5); c.closePath(); c.fill();
+      c.strokeStyle='#d9bd70'; c.lineWidth=1.8; c.beginPath(); c.moveTo(-18,4); c.lineTo(22,4); c.stroke();
+      c.fillStyle='#f5dc91'; c.beginPath(); c.arc(5,-7,6,0,Math.PI*2); c.fill(); c.fillStyle='#242038'; c.beginPath(); c.arc(8,-8,6,0,Math.PI*2); c.fill();
+      c.strokeStyle='#8064d1'; c.lineWidth=1.1; c.beginPath(); c.arc(-8,-3,5,0,Math.PI*2); c.stroke();
+      c.fillStyle='#d9bd70'; c.font='900 5px system-ui,sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.fillText('☾',-8,-3);
       break;
     case 'davetest':
       c.fillStyle='#9c6810';
@@ -2142,6 +2153,13 @@ function drawBoat(){
           ctx.fillStyle='rgba(255,232,119,'+a+')'; ctx.strokeStyle='rgba(122,73,4,'+a+')'; ctx.lineWidth=1.4; ctx.strokeText(e.letter,0,0); ctx.fillText(e.letter,0,0);
         }
         ctx.restore();
+        continue;
+      }
+      if(e.type==='witchMote'){
+        const a=1-e.t/1.4, sz=3+Math.sin(e.t*8+(e.phase||0))*1.4;
+        ctx.save(); ctx.translate(e.x-b.x,e.y-b.y-e.t*5); ctx.fillStyle='rgba(139,105,220,'+a+')'; ctx.shadowColor='#8b69dc'; ctx.shadowBlur=10;
+        ctx.beginPath(); ctx.arc(0,0,sz,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='rgba(238,218,255,'+a+')'; ctx.beginPath(); ctx.arc(-1,-1,sz*.3,0,Math.PI*2); ctx.fill(); ctx.restore();
         continue;
       }
       if(e.type !== 'wake') continue;

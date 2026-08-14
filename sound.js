@@ -5,7 +5,7 @@
    ============================================================ */
 
 const Sound = {
-  a: null, engOsc: null, engGain: null, engF: null, pinkAt: 0, pinkStep: 0,
+  a: null, engOsc: null, engGain: null, engF: null, pinkAt: 0, pinkStep: 0, witchAt: 0, witchStep: 0,
   noise: null, noiseGain: null, boostOsc: null, boostGain: null,
 
   init(){
@@ -63,5 +63,18 @@ const Sound = {
     o.type='triangle'; o.frequency.value=notes[this.pinkStep++%notes.length];
     g.gain.setValueAtTime(.035,t); g.gain.exponentialRampToValueAtTime(.001,t+.22);
     o.connect(g); g.connect(this.a.destination); o.start(t); o.stop(t+.23);
+  },
+
+  /* Original low, eerie pulse for the Moonlit Vessel. */
+  witchTrail(){
+    if(!G.save || !G.save.sound || !this.a) return;
+    const t=this.a.currentTime;
+    if(t<this.witchAt) return;
+    this.witchAt=t+.72;
+    const notes=[174.6,207.7,155.6,196];
+    const o=this.a.createOscillator(), g=this.a.createGain(), f=this.a.createBiquadFilter();
+    o.type='sine'; o.frequency.value=notes[this.witchStep++%notes.length]; f.type='lowpass'; f.frequency.value=520;
+    g.gain.setValueAtTime(.05,t); g.gain.exponentialRampToValueAtTime(.001,t+.62);
+    o.connect(f); f.connect(g); g.connect(this.a.destination); o.start(t); o.stop(t+.64);
   }
 };

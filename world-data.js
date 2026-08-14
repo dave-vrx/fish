@@ -73,7 +73,7 @@ const CODES = [
   { code:'MAKESHIP',  reward:'Vlad Autopet',                     active:false, items:{autopet:'vlad'} },
   { code:'SKULL',     reward:'Skullcrusher boat + BETA TESTER title', active:true, hidden:true, boats:['skull'], titles:['BETA TESTER'], badges:['betaTester'] },
   { code:'PINKFONG',  reward:'Pinkfong boat + PINKFONG! title', active:true, hidden:true, boats:['pinkfong'], titles:['PINKFONG!'], badges:['pinkfong'] },
-  { code:'WITCHY',    reward:'Moonlit boat + WITCHY title', active:true, hidden:true, boats:['witchy'], titles:['WITCHY'], badges:['witchy'] },
+  { code:'WITCHY',    reward:'Moonlit Sleep Token vessel + WITCHY title', active:true, hidden:true, boats:['witchy'], titles:['WITCHY'], badges:['witchy'], avatar:{gender:'female',skin:'fair',hair:'long',hairColor:'black',outfit:'violet',special:'witchy'} },
   { code:'DAVETEST',  reward:'Golden Beta Skiff + BETA TESTER title', active:true, hidden:true, boats:['davetest'], titles:['BETA TESTER'], badges:['daveTest'] },
   { code:'DAVEVR',    reward:'Creator yacht + CREATOR title', active:true, hidden:true, boats:['creator'], titles:['CREATOR'], badges:['creator'], equipTitle:'CREATOR', avatar:{gender:'male',skin:'fair',hair:'long',hairColor:'blonde',outfit:'gold',special:'creator'} }
 ];
