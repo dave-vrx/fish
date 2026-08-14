@@ -5,7 +5,7 @@
    ============================================================ */
 
 const Sound = {
-  a: null, engOsc: null, engGain: null, engF: null,
+  a: null, engOsc: null, engGain: null, engF: null, pinkAt: 0, pinkStep: 0,
   noise: null, noiseGain: null, boostOsc: null, boostGain: null,
 
   init(){
@@ -50,5 +50,18 @@ const Sound = {
     this.noiseGain.gain.setTargetAtTime(run ? 0.015 + r*0.05 : 0, t, 0.1);
     this.boostGain.gain.setTargetAtTime(boost > 0 ? 0.06 : 0, t, 0.05);
     this.boostOsc.frequency.setTargetAtTime(boost > 0 ? 520 : 220, t, 0.08);
+  },
+
+  /* Original sparkle cue for the Pinkfong Cruiser's star trail. */
+  pinkTrail(){
+    if(!G.save || !G.save.sound || !this.a) return;
+    const t=this.a.currentTime;
+    if(t<this.pinkAt) return;
+    this.pinkAt=t+0.34;
+    const notes=[784,988,1175,988];
+    const o=this.a.createOscillator(), g=this.a.createGain();
+    o.type='triangle'; o.frequency.value=notes[this.pinkStep++%notes.length];
+    g.gain.setValueAtTime(.035,t); g.gain.exponentialRampToValueAtTime(.001,t+.22);
+    o.connect(g); g.connect(this.a.destination); o.start(t); o.stop(t+.23);
   }
 };

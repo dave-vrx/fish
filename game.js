@@ -83,7 +83,7 @@ const G = {
   joy: { x:0, y:0 },
   fish: { state:'idle', pool:null, t:0, biteAt:0, game:null, catch:null },
   effects: [], sparkles: [],
-  saveTimer: 0, hudTimer: 0, mmTimer: 0, leviSyncTimer: 0, weatherDur: 0,
+  saveTimer: 0, hudTimer: 0, mmTimer: 0, leviSyncTimer: 0, pinkTrailTimer: 0, weatherDur: 0,
   frame: 0
 };
 const Fishing = { lastBiteCheck:0, held:false, lastStatus:'' };
@@ -1063,6 +1063,15 @@ function updateBoat(dt){
   if(b.speed > 8 && Math.random() < 0.5){
     G.effects.push({ type:'wake', x:b.x - Math.sin(b.head)*6, y:b.y + Math.cos(b.head)*6, t:0 });
   }
+  if(save.boat === 'pinkfong' && Math.abs(b.speed) > 10){
+    G.pinkTrailTimer += dt;
+    if(G.pinkTrailTimer >= 0.14){
+      G.pinkTrailTimer = 0;
+      const side=(Math.random()-.5)*12;
+      G.effects.push({type:'pinkStar',x:b.x-Math.sin(b.head)*14+Math.cos(b.head)*side,y:b.y+Math.cos(b.head)*14+Math.sin(b.head)*side,t:0,spin:Math.random()*Math.PI*2});
+      if(typeof Sound !== 'undefined') Sound.pinkTrail();
+    }
+  } else G.pinkTrailTimer=0;
   for(let i = G.effects.length-1; i >= 0; i--){
     G.effects[i].t += dt;
     if(G.effects[i].t > 1.4) G.effects.splice(i,1);
@@ -1892,6 +1901,15 @@ function drawBoat(){
   if(b.speed > 8){
     for(let i = G.effects.length-1; i >= 0; i--){
       const e = G.effects[i];
+      if(e.type === 'pinkStar'){
+        const a=1-e.t/1.4, sz=3+a*3;
+        ctx.save(); ctx.translate(e.x-b.x,e.y-b.y); ctx.rotate((e.spin||0)+e.t*4);
+        ctx.fillStyle='rgba(255,101,183,'+a+')'; ctx.beginPath();
+        for(let p=0;p<10;p++){ const r=p%2?sz*.45:sz; const q=-Math.PI/2+p*Math.PI/5; p?ctx.lineTo(Math.cos(q)*r,Math.sin(q)*r):ctx.moveTo(Math.cos(q)*r,Math.sin(q)*r); }
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle='rgba(255,220,104,'+a+')'; ctx.beginPath(); ctx.arc(0,0,sz*.28,0,Math.PI*2); ctx.fill(); ctx.restore();
+        continue;
+      }
       if(e.type !== 'wake') continue;
       const a = 1 - e.t/1.4;
       ctx.strokeStyle = 'rgba(255,255,255,'+(a*0.4)+')';
