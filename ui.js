@@ -388,16 +388,21 @@ const UI = {
     const earned = Object.keys(G.save.titles.done).length;
     byId('titleCount').textContent = earned + ' earned · choose the title shown above your name';
     const selected=G.save.selectedTitle||'';
-    let html = '<button class="title-card title-none '+(!selected?'selected':'')+'" onclick="UI.selectTitle(\'\')"><span class="t-title">No Title</span><span class="t-how">Hide your title from your nameplate.</span>'+(!selected?'<span class="t-earned">SELECTED</span>':'')+'</button>';
+    let html = '<button type="button" class="title-card title-none '+(!selected?'selected':'')+'" data-title=""><span class="t-title">No Title</span><span class="t-how">Hide your title from your nameplate.</span>'+(!selected?'<span class="t-earned">SELECTED</span>':'')+'</button>';
     for(const t of TITLES){
       const is = !!G.save.titles.done[t.name];
       const titleKey=encodeURIComponent(t.name);
-      html += '<button class="title-card'+(is?'':' locked')+(selected===t.name?' selected':'')+'"'+(is?' onclick="UI.selectTitle(decodeURIComponent(\''+titleKey+'\'))"':' disabled')+'>'+
+      html += '<button type="button" class="title-card'+(is?'':' locked')+(selected===t.name?' selected':'')+'"'+(is?' data-title="'+titleKey+'"':' disabled')+'>'+
         '<span class="t-title"'+(t.color?' style="color:'+escapeHtml(t.color)+'"':'')+'>'+escapeHtml(t.name)+'</span>'+
         '<span class="t-how">'+escapeHtml(t.how)+'</span>'+
         (is ? '<span class="t-earned">'+(selected===t.name?'SELECTED':'SELECT')+'</span>' : '')+'</button>';
     }
     grid.innerHTML = html;
+    grid.onclick = e => {
+      const card=e.target.closest('.title-card[data-title]');
+      if(!card || card.disabled) return;
+      UI.selectTitle(decodeURIComponent(card.dataset.title));
+    };
   },
   selectTitle(name){
     if(!Game.equipTitle(name)){ toast('You have not earned that title yet.','bad'); return; }
