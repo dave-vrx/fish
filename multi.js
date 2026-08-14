@@ -37,6 +37,7 @@ const Multi = (()=>{
     return COLORS[h%COLORS.length];
   }
   function myColor(){ if(!myColorVal) myColorVal=colorOf(pid()); return myColorVal; }
+  function isDave(){ return /dave/i.test(String(G.save.name||'')); }
 
   /* ---------------- presence ---------------- */
   async function sendPos(){
@@ -124,7 +125,7 @@ const Multi = (()=>{
     clearTimeout(showAnnouncement.timer); showAnnouncement.timer=setTimeout(()=>el.classList.add('hidden'),11000);
   }
   function sendAnnouncement(text){
-    if(String(G.save.name||'').trim().toLowerCase()!=='dave'){ toast('Announcements are reserved for Dave.','bad'); return; }
+    if(!isDave()){ toast('Announcements are reserved for Dave.','bad'); return; }
     text=String(text||'').replace(/\s+/g,' ').trim().slice(0,160); if(!text) return;
     const a={id:pid()+':announcement:'+Date.now(),text,at:Date.now()}; lastAnnouncement=a.id; showAnnouncement(a);
     fetch(ANN_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({announcement:a,updated:a.at})}).catch(()=>{});
@@ -202,10 +203,14 @@ const Multi = (()=>{
       renderLog(); statusText();
       const inp=byId('chatMsg');
       if(inp) setTimeout(()=>inp.focus(),60);
-      const admin=byId('announceBar'); if(admin) admin.classList.toggle('hidden',String(G.save.name||'').trim().toLowerCase()!=='dave');
+      const admin=byId('announceBar'); if(admin) admin.classList.toggle('hidden',!isDave());
     }else{
       const inp=byId('chatMsg'); if(inp) inp.blur();
     }
+  }
+  function openAnnouncer(){
+    if(!isDave()){ toast('Announcements are reserved for Dave.','bad'); return; }
+    toggle(true); setTimeout(()=>{ const i=byId('announceMsg'); if(i) i.focus(); },70);
   }
 
   /* ---------------- per-frame ---------------- */
@@ -408,7 +413,7 @@ const Multi = (()=>{
   }
   function init(){ start(); }
 
-  return { init, start, toggle, send:sendChat, announce:sendAnnouncement, tick, draw,
+  return { init, start, toggle, openAnnouncer, send:sendChat, announce:sendAnnouncement, tick, draw,
     get online(){ return online; }, get players(){ return players; }, get open(){ return open; } };
 })();
 window.Multi=Multi;
