@@ -47,7 +47,7 @@ function freshSave(){
     autopets: {}, autoSell: false, autopetStation:null, dailyScrap:{date:'',collected:{}}, badges: {},
     avatar: { gender:'female', skin:'warm', hair:'long', hairColor:'brown', outfit:'teal' },
     potionLuck: 0, potionSpeed: 0,
-    bounties: { date: '', list: [] },
+    bounties: { date: '', list: [] }, pinkfongHunt:{id:'',count:0},
     stats: { totalCaught:0, totalSold:0, perfect:0, big:0, maxWt:0, bounties:0 },
     sound: true
   };
@@ -64,6 +64,7 @@ function loadSave(){
     }
     save.autoSell=false;
     save.dailyScrap=Object.assign({date:'',collected:{}},raw.dailyScrap||{});
+    save.pinkfongHunt=Object.assign({id:'',count:0},raw.pinkfongHunt||{});
     save.quests = Object.assign({done:{},active:{},started:{}}, raw.quests||{});
     save.quests.started=Object.assign({},save.quests.started||{});
     for(const qid in save.quests.active) if(save.quests.active[qid]) save.quests.started[qid]=true;
@@ -91,7 +92,7 @@ function resetSave(){
 /* ---------------- state ---------------- */
 const G = {
   get save(){ return save; },
-  state: { weather:'Clear', time:'Day', weatherT:0, timeT:0, levi:null, bubbles:null, running:false },
+  state: { weather:'Clear', time:'Day', weatherT:0, timeT:0, levi:null, bubbles:null, pinkfongEvent:null, running:false },
   cam: { x:650, y:700, zoom:0.7 },
   boat: { x:650, y:700, head:-Math.PI/2, speed:0, boost:0, boostCd:0 },
   player: { onFoot:false, x:650, y:700, head:0, island:null },
@@ -100,7 +101,7 @@ const G = {
   fish: { state:'idle', pool:null, t:0, biteAt:0, game:null, catch:null },
   effects: [], sparkles: [],
   blockedIsland: null,
-  saveTimer: 0, hudTimer: 0, mmTimer: 0, leviSyncTimer: 0, leviAnnouncedHour: '', bubblesClaimedId: '', specialPoolSlot: -1, pinkTrailTimer: 0, witchTrailTimer: 0, jackTrailTimer: 0, betaTrailTimer: 0, betaTrailIndex: 0, weatherDur: 0,
+  saveTimer: 0, hudTimer: 0, mmTimer: 0, leviSyncTimer: 0, leviAnnouncedHour: '', bubblesClaimedId: '', pinkfongSongTimer:0, specialPoolSlot: -1, pinkTrailTimer: 0, witchTrailTimer: 0, jackTrailTimer: 0, betaTrailTimer: 0, betaTrailIndex: 0, weatherDur: 0,
   frame: 0
 };
 const Fishing = { lastBiteCheck:0, held:false, lastStatus:'' };
@@ -235,6 +236,24 @@ function tickBubbles(){
 }
 const Bubbles={receive:receiveBubblesEvent};
 window.Bubbles=Bubbles;
+function receivePinkfongEvent(event){
+  const current=G.state.pinkfongEvent;
+  if(!event||Number(event.endsAt)<=Date.now()){
+    if(!current||!event||event.id===current.id||Number(event.at)>=Number(current.at))G.state.pinkfongEvent=null;
+    return;
+  }
+  if(!current||Number(event.at)>=Number(current.at)){
+    G.state.pinkfongEvent=event;
+    if(save.pinkfongHunt.id!==event.id){save.pinkfongHunt={id:event.id,count:0};persist();}
+  }
+}
+function pinkfongActiveEvent(){
+  const event=G.state.pinkfongEvent;
+  if(!event||Number(event.endsAt)<=Date.now()){if(event)G.state.pinkfongEvent=null;return null;}
+  return event;
+}
+const PinkfongEvent={receive:receivePinkfongEvent};
+window.PinkfongEvent=PinkfongEvent;
 function leviHunterCount(){
   let n=0;
   if(Math.hypot(G.boat.x-LEVIATHAN_SPOT.x,G.boat.y-LEVIATHAN_SPOT.y)<LEVIATHAN_SPOT.r) n++;
@@ -257,6 +276,9 @@ function detectLoc(){
   if(lv.active&&!leviDefeated()){
     const d = Math.hypot(b.x-LEVIATHAN_SPOT.x, b.y-LEVIATHAN_SPOT.y);
     if(d < LEVIATHAN_SPOT.r) return { name:'Leviathan', levi:true, pool:'Leviathan' };
+  }
+  if(pinkfongActiveEvent()&&Math.hypot(b.x-PINKFONG_SPOT.x,b.y-PINKFONG_SPOT.y)<PINKFONG_SPOT.r){
+    return {name:'Pinkfong Party',pinkfong:true,pool:'Pinkfong Event'};
   }
   for(const p of POOLS){
     const d = Math.hypot(b.x-p.x, b.y-p.y);
@@ -384,14 +406,15 @@ const SECRET_LOC = {};
 
 /* ---------------- fishing: pool selection ---------------- */
 function buildPool(loc){
-  let list = [], poolMod = null, levi = false;
+  let list = [], poolMod = null, levi = false, pinkfong=false;
   if(loc.levi){ list = BY_LOC['Leviathan'].slice(); levi = true; }
-  else if(loc.island){ list = BY_LOC[loc.island.name].slice(); }
+  else if(loc.pinkfong){list=BY_LOC['Pinkfong Event'].slice();pinkfong=true;}
+  else if(loc.island){ list = (BY_LOC[loc.island.name]||BY_LOC['Open Sea']).slice(); }
   else if(loc.pool){ list = BY_LOC['Open Sea'].slice(); poolMod = POOL_MODS[loc.pool]; }
   else { list = BY_LOC['Open Sea'].slice(); }
   const t = G.state.time, w = G.state.weather;
   list = list.filter(f => (f.time==='Any'||f.time===t) && (f.weather==='Any'||f.weather===w));
-  return { list, poolMod, levi, name:loc.name, island:loc.island||null, pool:loc.pool||null };
+  return { list, poolMod, levi, pinkfong, name:loc.name, island:loc.island||null, pool:loc.pool||null };
 }
 
 /* ---------------- deployable Autopet ---------------- */
@@ -551,6 +574,10 @@ function rollFish(){
   if(pool.levi){
     const f = pickNormalFish(pool.list);
     return makeCatch(f, stat);
+  }
+  if(pool.pinkfong){
+    const f=pool.list[Math.floor(Math.random()*pool.list.length)],c=makeCatch(f,stat);
+    c.val=67;c.xpOverride=67;c.pinkfong=true;c.pinkfongEventId=(pinkfongActiveEvent()||{}).id||'';c.mut=null;return c;
   }
 
   const r = Math.random();
@@ -776,7 +803,7 @@ function resolveCatch(){
     return;
   }
   const stat = statSums();
-  let xp = Math.floor((c.perfect ? (RARITIES[c.rar].xpPerfect||RARITIES[c.rar].xp) : (RARITIES[c.rar].xp||10))
+  let xp = c.xpOverride!=null ? c.xpOverride : Math.floor((c.perfect ? (RARITIES[c.rar].xpPerfect||RARITIES[c.rar].xp) : (RARITIES[c.rar].xp||10))
     * (c.huge?1.5:1) * (1 + (stat.xp||0)/100));
   c.xp = xp;
   let bonusCoins = 0;
@@ -797,6 +824,11 @@ function resolveCatch(){
   updateBounties(c);
   checkIndexCompletion(c.name);
   addXp(xp);
+  if(c.pinkfong&&c.pinkfongEventId&&save.pinkfongHunt.id===c.pinkfongEventId){
+    save.pinkfongHunt.count=Math.min(3,(save.pinkfongHunt.count||0)+1);
+    if(save.pinkfongHunt.count>=3)grantTitle('PINKFONG!');
+    else toast('💖 Pinkfong party fish '+save.pinkfongHunt.count+'/3!','gold');
+  }
   let sold = null;
   if(bonusCoins > 0){
     save.coins += bonusCoins; save.lifetime += bonusCoins;
@@ -1575,6 +1607,15 @@ function updateHud(){
     byId('bubblesWrap').classList.add('hidden');
     byId('bubblesCountWrap').classList.add('hidden');
   }
+  const pink=pinkfongActiveEvent();
+  if(pink){
+    const rem=Math.max(0,Number(pink.endsAt)-Date.now()),time=mmss(rem/1000),count=save.pinkfongHunt.id===pink.id?(save.pinkfongHunt.count||0):0;
+    byId('pinkfongEventWrap').classList.remove('hidden');byId('pinkfongEventCountWrap').classList.remove('hidden');
+    byId('pinkfongEventInfo').textContent=count>=3?'PINKFONG! title earned!':'Catch 3 party fish to earn PINKFONG! · '+count+'/3';
+    byId('pinkfongEventTimer').textContent='Party ends in '+time;byId('pinkfongEventCountdown').textContent='💖 Pinkfong '+count+'/3 · '+time;
+  }else{
+    byId('pinkfongEventWrap').classList.add('hidden');byId('pinkfongEventCountWrap').classList.add('hidden');
+  }
 }
 function mmss(sec){
   sec = Math.max(0, Math.floor(sec));
@@ -2311,6 +2352,8 @@ function drawIslands(){
   }
   const bubbles=bubblesActiveEvent();
   if(bubbles) drawBubblesBoss(BUBBLES_SPOT,bubbles);
+  const pink=pinkfongActiveEvent();
+  if(pink)drawPinkfongParty(PINKFONG_SPOT,pink);
   ctx.restore();
 }
 
@@ -2403,6 +2446,22 @@ function drawBubblesBoss(s,event){
     ctx.fillStyle='rgba(247,255,239,.96)';ctx.strokeStyle='#217b47';ctx.lineWidth=2;leviRoundRect(sx-w/2,sy-13,w,26,10);ctx.fill();ctx.stroke();
     ctx.fillStyle='#174b2d';ctx.fillText(text,sx,sy);
   }
+  ctx.restore();
+}
+
+function drawPinkfongParty(s,event){
+  const t=G.frame*.055,pulse=.5+.5*Math.sin(t*2),x=s.x+Math.sin(t*.7)*34,y=s.y+Math.cos(t*.9)*18;
+  ctx.save();
+  const glow=ctx.createRadialGradient(s.x,s.y,10,s.x,s.y,s.r);glow.addColorStop(0,'rgba(255,99,186,.3)');glow.addColorStop(.7,'rgba(72,196,242,.14)');glow.addColorStop(1,'rgba(255,100,190,0)');ctx.fillStyle=glow;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(255,180,226,'+(.65+.25*pulse)+')';ctx.lineWidth=4;ctx.setLineDash([6,8]);ctx.lineDashOffset=-G.frame;ctx.beginPath();ctx.arc(s.x,s.y,s.r*.92,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+  for(let i=0;i<11;i++){const a=i/11*Math.PI*2+t*.35,rr=s.r*(.55+.12*Math.sin(t+i));ctx.fillStyle=i%2?'#fff28d':'#ff8dcb';ctx.save();ctx.translate(s.x+Math.cos(a)*rr,s.y+Math.sin(a)*rr);ctx.rotate(a+t);ctx.fillRect(-3,-3,6,6);ctx.restore();}
+  ctx.translate(x,y);ctx.rotate(Math.sin(t*.8)*.12);
+  ctx.fillStyle='#ff62ae';ctx.strokeStyle='#8f245f';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(0,0,54,31,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(-45,0);ctx.lineTo(-76,-29);ctx.lineTo(-68,3);ctx.lineTo(-76,28);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#ff9bce';ctx.beginPath();ctx.moveTo(-8,-25);ctx.lineTo(6,-52);ctx.lineTo(21,-25);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(25,-8,9,0,Math.PI*2);ctx.fill();ctx.fillStyle='#1b3151';ctx.beginPath();ctx.arc(28,-8,4,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#7c174c';ctx.beginPath();ctx.arc(38,7,10,.15,Math.PI-.15);ctx.stroke();
+  ctx.fillStyle='#ffd75f';ctx.beginPath();ctx.moveTo(-8,-29);ctx.lineTo(2,-48);ctx.lineTo(12,-29);ctx.closePath();ctx.fill();
+  ctx.rotate(-Math.sin(t*.8)*.12);ctx.textAlign='center';ctx.font='1000 14px system-ui,sans-serif';ctx.fillStyle='#fff497';ctx.strokeStyle='#8c245e';ctx.lineWidth=4;ctx.strokeText('PINKFONG PARTY!',0,-72);ctx.fillText('PINKFONG PARTY!',0,-72);
+  const beat=Math.floor((Date.now()-Number(event.at))/1800);if((Date.now()-Number(event.at))%1800<1250){ctx.font='900 12px system-ui,sans-serif';ctx.fillStyle='#fff';ctx.strokeText(beat%2?'♪ splash splash! ♪':'♪ Baby shark! ♪',0,-94);ctx.fillText(beat%2?'♪ splash splash! ♪':'♪ Baby shark! ♪',0,-94);}
   ctx.restore();
 }
 
@@ -2771,6 +2830,9 @@ function drawMinimap(){
     mctx.fillStyle='#62ef91'; mctx.strokeStyle='rgba(190,255,210,.9)'; mctx.lineWidth=1;
     mctx.beginPath(); mctx.arc(BUBBLES_SPOT.x*sx,BUBBLES_SPOT.y*sy,4.5,0,Math.PI*2); mctx.fill(); mctx.stroke();
   }
+  if(pinkfongActiveEvent()){
+    mctx.fillStyle='#ff67b5';mctx.strokeStyle='#fff3a2';mctx.lineWidth=1.2;mctx.beginPath();mctx.arc(PINKFONG_SPOT.x*sx,PINKFONG_SPOT.y*sy,5,0,Math.PI*2);mctx.fill();mctx.stroke();
+  }
   const left=Math.ceil(specialPoolTimeLeft()/1000), mins=Math.floor(left/60), secs=String(left%60).padStart(2,'0');
   mctx.fillStyle='rgba(2,14,25,.88)'; mctx.fillRect(0,mh-15,mw,15);
   mctx.fillStyle='#ccefff'; mctx.font='800 7px system-ui,sans-serif'; mctx.textAlign='center';
@@ -2828,6 +2890,10 @@ function loop(t){
     updateBoat(delta*0.05);
   }
   tickBubbles();
+  const pinkEvent=pinkfongActiveEvent();
+  if(pinkEvent&&Math.hypot(G.boat.x-PINKFONG_SPOT.x,G.boat.y-PINKFONG_SPOT.y)<700){
+    G.pinkfongSongTimer-=delta;if(G.pinkfongSongTimer<=0){G.pinkfongSongTimer=7.2;if(typeof Sound!=='undefined')Sound.pinkfongSong();}
+  }else G.pinkfongSongTimer=0;
 
   G.curLoc = detectLoc();
   G.leviSyncTimer -= delta;

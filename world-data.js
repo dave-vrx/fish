@@ -129,6 +129,8 @@ const POOLS = [];
 const LEVIATHAN_SPOT = { name:'Leviathan Spawn', x:2520, y:1600, r:170 };
 const BUBBLES_SPOT = { name:'BUBBLES!', x:1180, y:1370, r:155 };
 const BUBBLES_DURATION = 120000;
+const PINKFONG_SPOT = { name:'Pinkfong Party', x:1250, y:1780, r:150 };
+const PINKFONG_DURATION = 120000;
 
 /* Open sea (anywhere else on the map) */
 const OPEN_SEA = { name:'Open Sea', water:'Saltwater' };

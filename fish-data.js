@@ -265,6 +265,12 @@ const FISH_DATA = {
     ['Easter Bunnyfish','Exotic','Any','Any','Any','5','55','https://static.wikitide.net/fishwikiwiki/thumb/f/f3/Easter_Bunnyfish.webp/120px-Easter_Bunnyfish.webp.png']
   ],
 
+  'Pinkfong Event': [
+    ['Little Pinkfong Fish','Curious','Any','Any','Any','0.5','3','https://static.wikitide.net/fishwikiwiki/thumb/d/de/Pink_Egg_Pattern_Minnow.webp/120px-Pink_Egg_Pattern_Minnow.webp.png'],
+    ['Bluey Fish','Curious','Any','Any','Any','0.5','4','https://static.wikitide.net/fishwikiwiki/thumb/8/8c/Bluefish.webp/120px-Bluefish.webp.png'],
+    ['Baby Shark','Curious','Any','Any','Any','1','6','https://static.wikitide.net/fishwikiwiki/thumb/d/d6/Black_Sharkminnow.webp/120px-Black_Sharkminnow.webp.png']
+  ],
+
   'Leviathan': [
     ['Giant Cleanerfish','Elusive','Any','Any','Any','5.0','9.9','https://static.wikitide.net/fishwikiwiki/thumb/d/d4/Giant_Cleanerfish.webp/120px-Giant_Cleanerfish.webp.png'],
     ['Leviathan Dorsal Spike','Fabled','Any','Any','Any','-','10','https://static.wikitide.net/fishwikiwiki/thumb/7/75/Leviathan_Dorsal_Spike.webp/120px-Leviathan_Dorsal_Spike.webp.png'],

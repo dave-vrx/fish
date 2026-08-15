@@ -5,7 +5,7 @@
    ============================================================ */
 
 const Sound = {
-  a: null, engOsc: null, engGain: null, engF: null, pinkAt: 0, pinkStep: 0, witchAt: 0, witchStep: 0, jackAt: 0,
+  a: null, engOsc: null, engGain: null, engF: null, pinkAt: 0, pinkStep: 0, pinkSongAt:0, witchAt: 0, witchStep: 0, jackAt: 0,
   noise: null, noiseGain: null, boostOsc: null, boostGain: null,
 
   init(){
@@ -63,6 +63,13 @@ const Sound = {
     o.type='triangle'; o.frequency.value=notes[this.pinkStep++%notes.length];
     g.gain.setValueAtTime(.035,t); g.gain.exponentialRampToValueAtTime(.001,t+.22);
     o.connect(g); g.connect(this.a.destination); o.start(t); o.stop(t+.23);
+  },
+  /* Original bright shark-party jingle for the Pinkfong fishing event. */
+  pinkfongSong(){
+    if(!G.save||!G.save.sound||!this.a)return;
+    const now=this.a.currentTime;if(now<this.pinkSongAt)return;this.pinkSongAt=now+6.8;
+    const notes=[392,440,523,440,659,523,440,392];
+    notes.forEach((freq,i)=>{const t=now+i*.16,o=this.a.createOscillator(),g=this.a.createGain();o.type=i%2?'triangle':'sine';o.frequency.value=freq;g.gain.setValueAtTime(.045,t);g.gain.exponentialRampToValueAtTime(.001,t+.2);o.connect(g);g.connect(this.a.destination);o.start(t);o.stop(t+.21);});
   },
 
   /* Original low, eerie pulse for the Moonlit Vessel. */

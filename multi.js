@@ -14,6 +14,7 @@ const Multi = (()=>{
   const CHAT_URL='https://mantledb.sh/v2/fishvr/chat';
   const ANN_URL='https://mantledb.sh/v2/fishvr/announcement';
   const BUBBLES_URL='https://mantledb.sh/v2/fishvr/bubbles';
+  const PINKFONG_EVENT_URL='https://mantledb.sh/v2/fishvr/pinkfong-event';
   const COLORS=['#ff5d6c','#ffd166','#46e0a0','#3ee0ff','#c58cff','#ff9de8','#ff8c00','#ff6b9d','#b6ff5e','#7fe7ff'];
   const PRES_INT=1200, CHAT_INT=1400, STALE=22000, BUBBLE_MS=7000;
 
@@ -143,6 +144,18 @@ const Multi = (()=>{
       await fetch(BUBBLES_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:cleared,updated:now})});
     }catch(e){}
   }
+  async function fetchPinkfongEvent(){
+    try{
+      const r=await fetch(PINKFONG_EVENT_URL,{cache:'no-store'});if(!r.ok)return;
+      const d=await r.json(),event=d&&d.event;
+      if(window.PinkfongEvent)PinkfongEvent.receive(event||null);
+    }catch(e){}
+  }
+  function triggerPinkfongEvent(msg){
+    const event={id:'pinkfong:'+msg.id,at:msg.at,endsAt:msg.at+PINKFONG_DURATION,triggeredBy:(msg.name||'Angler').slice(0,16)};
+    if(window.PinkfongEvent)PinkfongEvent.receive(event);
+    fetch(PINKFONG_EVENT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event,updated:msg.at})}).catch(()=>{});
+  }
   function showAnnouncement(a){
     const el=byId('globalAnnouncement'); if(!el) return;
     el.textContent=a.system
@@ -185,6 +198,7 @@ const Multi = (()=>{
     })();
     pushChat(msg);
     if(/\bbubbles\b/i.test(text)) triggerBubbles(msg);
+    if(/\bpinkfong\b/i.test(text)) triggerPinkfongEvent(msg);
   }
 
   function pushChat(m){
@@ -428,7 +442,7 @@ const Multi = (()=>{
     if(started) return;
     started=true;
     pid(); myColor();
-    const pulse=()=>{ sendPos(); fetchPlayers(); fetchChat(); fetchAnnouncement(); fetchBubbles(); };
+    const pulse=()=>{ sendPos(); fetchPlayers(); fetchChat(); fetchAnnouncement(); fetchBubbles(); fetchPinkfongEvent(); };
     pulse();
     setInterval(pulse, PRES_INT);
     setInterval(fetchChat, CHAT_INT);
