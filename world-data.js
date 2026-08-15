@@ -103,8 +103,9 @@ const ISLANDS = [
   { id:'altar',     name:'The Altar',      x:2250, y:330,  r:95,  water:'Saltwater',  theme:'rock',     desc:'Enchant your rod here using relics.' }
 ];
 
-/* Special fishing pools (circle areas) — POOL_MODS in fish-data.js */
-const POOLS = [
+/* Special fishing pool types. Game.js selects two and relocates them every
+   three minutes using a shared time seed, so all players see one rotation. */
+const POOL_TYPES = [
   { name:'Strange Whirlpool', x:1180, y:1150, r:120 },
   { name:'Sandy Updraft',     x:320,  y:1080, r:95  },
   { name:'Savanna Rift',      x:2100, y:1180, r:95  },
@@ -115,6 +116,7 @@ const POOLS = [
   { name:'Midas Rift',        x:1000, y:2250, r:95  },
   { name:'Occult Pool',       x:2050, y:2350, r:95  }
 ];
+const POOLS = [];
 
 /* Leviathan spawn area (active during even-hour UTC windows) */
 const LEVIATHAN_SPOT = { name:'Leviathan Spawn', x:2520, y:1600, r:170 };

@@ -519,6 +519,75 @@ input{font-family:inherit}
   .logo em{display:none}
 }
 
+/* ============ RESPONSIVE PLAYSPACE REFRESH ============ */
+:root{--glass:rgba(4,22,38,.82);--glass-line:rgba(137,218,255,.22)}
+body{min-height:var(--app-height,100dvh)}
+#hud{min-height:60px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));background:linear-gradient(180deg,rgba(2,12,22,.94) 0%,rgba(2,12,22,.58) 68%,transparent 100%)}
+.chip{min-height:38px;border-color:var(--glass-line);background:var(--glass);box-shadow:0 5px 18px rgba(0,0,0,.28)}
+#bottomNav{background:rgba(2,15,27,.9);border-color:var(--glass-line);box-shadow:0 -8px 28px rgba(0,0,0,.22)}
+#bottomNav button{min-height:48px;border-radius:12px}
+#bottomNav button:focus-visible,.chip:focus-visible,#btnCast:focus-visible,#btnBoost:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#locTag span{background:var(--glass);box-shadow:0 4px 14px rgba(0,0,0,.22)}
+
+@media (max-width:719px){
+  :root{--nav-h:64px}
+  #hud{align-items:flex-start;gap:6px;padding-top:calc(7px + env(safe-area-inset-top,0px))}
+  .logo{padding-top:5px}.logo span{font-size:17px}.logo em{font-size:7px}
+  .hud-chips{gap:5px;flex-wrap:nowrap;overflow:visible}
+  .chip{min-height:36px;padding:6px 8px;font-size:12px}
+  #chipIndex,#chipWeather{display:none}
+  #chipName{max-width:128px}#hudName{overflow:hidden;text-overflow:ellipsis;max-width:68px}
+  #minimapWrap{top:calc(60px + env(safe-area-inset-top,0px));left:max(8px,env(safe-area-inset-left));transform:scale(.82);transform-origin:top left;border-radius:14px}
+  #locTag{bottom:calc(var(--nav-h) + 9px + var(--safe-b))}#locTag span{padding:4px 12px;font-size:12px}
+  #joyZone{left:max(14px,env(safe-area-inset-left));bottom:calc(var(--nav-h) + 18px + var(--safe-b));width:136px;height:136px;opacity:.76;border:2px solid rgba(126,225,255,.36);background:radial-gradient(circle,rgba(62,224,255,.2),rgba(20,92,133,.1) 62%,transparent)}
+  #joyKnob{width:58px;height:58px;margin:-29px 0 0 -29px;background:rgba(62,224,255,.46);box-shadow:0 0 0 8px rgba(62,224,255,.08),0 0 18px rgba(62,224,255,.45)}
+  #btnCast{right:max(14px,env(safe-area-inset-right));bottom:calc(var(--nav-h) + 30px + var(--safe-b));width:88px;height:88px;font-size:30px;border-width:3px;box-shadow:0 8px 26px rgba(18,82,158,.72),inset 0 1px rgba(255,255,255,.3)}
+  #btnCast span{font-size:11px}
+  #btnBoost{right:max(28px,calc(env(safe-area-inset-right) + 14px));bottom:calc(var(--nav-h) + 130px + var(--safe-b));width:60px;height:60px;font-size:25px}
+  #btnLand{right:max(112px,calc(env(safe-area-inset-right) + 98px));bottom:calc(var(--nav-h) + 46px + var(--safe-b));min-height:44px;padding:10px 13px}
+  #bottomNav{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+  #bottomNav button{font-size:21px;gap:2px}#bottomNav button span{font-size:9px}
+  .modal{padding:22px 16px calc(22px + var(--safe-b));max-height:92dvh}.modal h1{font-size:21px}
+  .shop-item,.inv-item,.quest-item,.bounty-item,.enchant-row{padding:11px 9px;gap:8px}
+  #fishUI{bottom:calc(var(--nav-h) + 8px + var(--safe-b));width:calc(100vw - 16px);padding:10px 12px;gap:7px}.reel{height:min(170px,25vh)}
+}
+
+@media (max-width:430px){
+  #chipFriends{display:none}.chip.icon-only{padding:6px 7px}
+  #chipName{max-width:112px}.lv-pill{padding:2px 5px}
+  #minimapWrap{transform:scale(.72)}
+  #bottomNav button:nth-child(5){display:none}
+  .gear-strip .gear:nth-child(2){display:none}
+  .fish-tip{display:none}
+}
+
+@media (min-width:900px){
+  :root{--nav-h:68px}
+  #hud{padding:12px 18px}.logo span{font-size:23px}
+  #minimapWrap{top:76px;left:18px}
+  #bottomNav{left:50%;right:auto;bottom:14px;transform:translateX(-50%);width:min(680px,72vw);height:58px;padding:0 10px;border:1px solid var(--glass-line);border-radius:18px}
+  #bottomNav button{font-size:20px}
+  #joyZone{display:none}
+  #btnCast{right:26px;bottom:30px;width:88px;height:88px}
+  #btnBoost{right:128px;bottom:43px;width:58px;height:58px}
+  #btnLand{right:205px;bottom:49px}
+  #locTag{bottom:86px}
+  #fishUI{bottom:28px}
+}
+
+@media (max-height:519px) and (orientation:landscape){
+  :root{--nav-h:52px}
+  #hud{min-height:48px;padding-top:calc(4px + env(safe-area-inset-top));padding-bottom:4px}.logo em{display:none}
+  .chip{min-height:32px;padding-top:4px;padding-bottom:4px}
+  #minimapWrap{top:48px;transform:scale(.62)}
+  #joyZone{width:112px;height:112px;bottom:calc(var(--nav-h) + 8px + var(--safe-b))}
+  #btnCast{width:72px;height:72px;bottom:calc(var(--nav-h) + 12px + var(--safe-b))}
+  #btnBoost{width:48px;height:48px;right:98px;bottom:calc(var(--nav-h) + 24px + var(--safe-b))}
+  #btnLand{right:160px;bottom:calc(var(--nav-h) + 28px + var(--safe-b))}
+  #bottomNav button{font-size:17px}#bottomNav button span{font-size:8px}
+  #fishUI{width:min(620px,72vw);right:8px;left:auto;transform:none;bottom:calc(var(--nav-h) + 6px);display:grid;grid-template-columns:54px 1fr;align-items:center}.gear-strip,.fish-tip{display:none}.reel-wrap{grid-row:1/4}.reel{height:min(190px,45vh)}
+}
+
 /* ============ FRIENDS & DM ============ */
 #chipFriends{position:relative}
 .friend-status{font-size:11px;color:var(--green);min-height:14px;margin:2px 2px 6px}
