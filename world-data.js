@@ -108,6 +108,7 @@ const ISLANDS = [
 ];
 
 const HEMLOCK_SPOT = { x:3615, y:1135 };
+const PRISTINA_SPOT = { x:2975, y:950 };
 
 /* Special fishing pool types. Game.js selects two and relocates them every
    three minutes using a shared time seed, so all players see one rotation. */
