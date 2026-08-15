@@ -92,7 +92,7 @@ const G = {
   fish: { state:'idle', pool:null, t:0, biteAt:0, game:null, catch:null },
   effects: [], sparkles: [],
   blockedIsland: null,
-  saveTimer: 0, hudTimer: 0, mmTimer: 0, leviSyncTimer: 0, pinkTrailTimer: 0, witchTrailTimer: 0, jackTrailTimer: 0, betaTrailTimer: 0, betaTrailIndex: 0, weatherDur: 0,
+  saveTimer: 0, hudTimer: 0, mmTimer: 0, leviSyncTimer: 0, specialPoolSlot: -1, pinkTrailTimer: 0, witchTrailTimer: 0, jackTrailTimer: 0, betaTrailTimer: 0, betaTrailIndex: 0, weatherDur: 0,
   frame: 0
 };
 const Fishing = { lastBiteCheck:0, held:false, lastStatus:'' };
@@ -211,6 +211,57 @@ function detectLoc(){
     if(d < p.r) return { name:p.name, pool:p.name };
   }
   return { name:OPEN_SEA.name, sea:true };
+}
+
+/* ---------------- rotating special fishing events ---------------- */
+const SPECIAL_POOL_MS = 3 * 60 * 1000;
+function specialPoolTimeLeft(now){
+  return SPECIAL_POOL_MS - ((now || Date.now()) % SPECIAL_POOL_MS);
+}
+function specialPoolRng(seed){
+  let a = seed >>> 0;
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function validSpecialPoolSpot(x,y,r,active){
+  if(x < r+150 || x > WORLD_W-r-150 || y < r+150 || y > WORLD_H-r-150) return false;
+  for(const isl of ISLANDS){
+    if(Math.hypot(x-isl.x,y-isl.y) < isl.r+r+105) return false;
+  }
+  if(Math.hypot(x-LEVIATHAN_SPOT.x,y-LEVIATHAN_SPOT.y) < LEVIATHAN_SPOT.r+r+80) return false;
+  for(const p of active){
+    if(Math.hypot(x-p.x,y-p.y) < p.r+r+260) return false;
+  }
+  return true;
+}
+function updateSpecialPools(force){
+  const slot = Math.floor(Date.now()/SPECIAL_POOL_MS);
+  if(!force && slot === G.specialPoolSlot) return false;
+  const firstRun = G.specialPoolSlot < 0;
+  const rng = specialPoolRng(slot ^ 0xA69E12F3);
+  const types = POOL_TYPES.slice();
+  for(let i=types.length-1;i>0;i--){
+    const j=Math.floor(rng()*(i+1)); [types[i],types[j]]=[types[j],types[i]];
+  }
+  const next=[];
+  for(const type of types.slice(0,2)){
+    let x=type.x, y=type.y;
+    for(let tries=0;tries<100;tries++){
+      const tx=180+rng()*(WORLD_W-360), ty=180+rng()*(WORLD_H-360);
+      if(validSpecialPoolSpot(tx,ty,type.r,next)){ x=Math.round(tx); y=Math.round(ty); break; }
+    }
+    next.push({name:type.name,x,y,r:type.r});
+  }
+  POOLS.splice(0,POOLS.length,...next);
+  G.specialPoolSlot=slot;
+  G.mmTimer=0;
+  for(const key in POOL_PARTS) delete POOL_PARTS[key];
+  if(!firstRun) toast('🌊 Special events moved: '+POOLS.map(p=>p.name).join(' + '),'gold');
+  return true;
 }
 const SECRET_LOC = {};
 (function(){
@@ -1319,6 +1370,8 @@ function worldToScreen(x,y){
 function resize(){
   DPR = Math.min(2, window.devicePixelRatio || 1);
   W = window.innerWidth; H = window.innerHeight;
+  document.documentElement.style.setProperty('--app-height', H+'px');
+  document.body.classList.toggle('compact-landscape', H < 520 && W > H);
   canvas.width = W*DPR; canvas.height = H*DPR;
   canvas.style.width = W+'px'; canvas.style.height = H+'px';
   ctx.setTransform(DPR,0,0,DPR,0,0);
@@ -2222,9 +2275,14 @@ function drawBoat(){
     }
   }
   ctx.rotate(b.head - Math.PI/2);
-  ctx.fillStyle = 'rgba(0,10,20,.18)';
-  ctx.beginPath(); ctx.ellipse(2, 3, 16, 10, 0, 0, Math.PI*2); ctx.fill();
-  drawBoatSprite(ctx, save.boat, 1);
+  /* Keep the player's boat legible on small screens without making the whole
+     archipelago feel cramped. The inverse zoom makes its on-screen footprint
+     consistent while the small breakpoint boost helps touch players. */
+  const boatScreenScale = W < 600 ? 1.48 : (W < 900 ? 1.32 : 1.18);
+  const boatScale = boatScreenScale / Math.max(.55, G.cam.zoom);
+  ctx.fillStyle = 'rgba(0,10,20,.22)';
+  ctx.beginPath(); ctx.ellipse(2, 4, 18*boatScale, 11*boatScale, 0, 0, Math.PI*2); ctx.fill();
+  drawBoatSprite(ctx, save.boat, boatScale);
   ctx.restore();
 }
 function updateLandAvatar(){
@@ -2311,12 +2369,13 @@ function drawMinimap(){
   });
   POOLS.forEach((p, i) => {
     const col = POOL_COLOR[p.name] || '#78f0ff';
-    mctx.fillStyle = col; mctx.globalAlpha = 0.55;
+    const pulse=1+0.3*Math.sin(G.frame*.12+i*Math.PI);
+    mctx.fillStyle = col; mctx.globalAlpha = 0.62;
     mctx.beginPath(); mctx.arc(p.x*sx, p.y*sy, 2.5, 0, Math.PI*2); mctx.fill();
     mctx.globalAlpha = 1;
     mctx.strokeStyle = col; mctx.globalAlpha = 0.8;
     mctx.lineWidth = 1;
-    mctx.beginPath(); mctx.arc(p.x*sx, p.y*sy, 4, 0, Math.PI*2); mctx.stroke();
+    mctx.beginPath(); mctx.arc(p.x*sx, p.y*sy, 4*pulse, 0, Math.PI*2); mctx.stroke();
     mctx.globalAlpha = 1;
   });
   const lv = leviStatus();
@@ -2324,6 +2383,10 @@ function drawMinimap(){
     mctx.fillStyle = 'rgba(255,80,90,.8)';
     mctx.beginPath(); mctx.arc(LEVIATHAN_SPOT.x*sx, LEVIATHAN_SPOT.y*sy, 4, 0, Math.PI*2); mctx.fill();
   }
+  const left=Math.ceil(specialPoolTimeLeft()/1000), mins=Math.floor(left/60), secs=String(left%60).padStart(2,'0');
+  mctx.fillStyle='rgba(2,14,25,.88)'; mctx.fillRect(0,mh-15,mw,15);
+  mctx.fillStyle='#ccefff'; mctx.font='800 7px system-ui,sans-serif'; mctx.textAlign='center';
+  mctx.fillText('2 LIVE EVENTS  ·  MOVE IN '+mins+':'+secs,mw/2,mh-5);
   const mp = (window.Multi && Multi.players) || null;
   if(mp){
     for(const id in mp){
@@ -2360,6 +2423,7 @@ function loop(t){
   const delta = dt;
   G.state.weatherT += delta;
   G.state.timeT += delta;
+  updateSpecialPools(false);
   if(G.state.weatherT > G.state.weatherDur){ G.state.weatherT = 0; nextWeather(); }
   if(G.state.timeT > 180){ G.state.timeT = 0; advanceTime(); }
 
@@ -2386,7 +2450,14 @@ function loop(t){
   const focus=G.player.onFoot?G.player:G.boat;
   G.cam.x += (focus.x - G.cam.x) * Math.min(1, delta*5);
   G.cam.y += (focus.y - G.cam.y) * Math.min(1, delta*5);
-  G.cam.zoom = G.player.onFoot ? Math.max(.8,Math.min(1.72,W/620)) : Math.max(0.5, Math.min(1.5, W/780));
+  const portrait = H > W;
+  const sailZoom = portrait
+    ? Math.max(.68, Math.min(.92, W/560))
+    : Math.max(.72, Math.min(1.38, Math.min(W/880, H/520)));
+  const footZoom = portrait
+    ? Math.max(.92, Math.min(1.3, W/420))
+    : Math.max(.9, Math.min(1.58, Math.min(W/680, H/410)));
+  G.cam.zoom = G.player.onFoot ? footZoom : sailZoom;
 
   if(Math.random() < delta*3 && G.sparkles.length < 90){
     G.sparkles.push({ x: G.cam.x - W/(2*G.cam.zoom) + Math.random()*(W/G.cam.zoom),
@@ -2424,11 +2495,14 @@ const Game = {
   itemCanShow, leviStatus, leviHealth, leviHunterCount, relicToKey, locName, effLuck, effAtt, fishValue, toggleLand,
   updateHud, resetSave, questMap: ()=>QUESTS,
   titles: ()=>TITLES, codes: ()=>CODES, poolMods: POOL_MODS,
+  activeSpecialPools: ()=>POOLS.map(p=>Object.assign({},p)),
+  specialPoolTimeLeft,
   indexCount: ()=>Object.keys(save.index).length,
   persist, applyAvatarLook,
   refreshBounties: ()=>{ genBounties(); },
   init(){
     loadSave();
+    updateSpecialPools(true);
     resize();
     bindInput();
     genBounties();
