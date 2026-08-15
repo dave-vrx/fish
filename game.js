@@ -1460,18 +1460,16 @@ function updateHud(){
   byId('locIndexText').textContent=found+' / '+total+' · '+pct+'%';
   byId('locIndex').setAttribute('aria-label',indexLoc+' fish index: '+pct+' percent complete');
   const lv = leviStatus();
-  if(lv.active){
-    const health=leviHealth();
-    announceLeviathanDefeat(health);
+  const health=lv.active?leviHealth():null;
+  if(health) announceLeviathanDefeat(health);
+  if(lv.active&&health.hp>0){
     byId('leviWrap').classList.remove('hidden');
     byId('leviCountWrap').classList.remove('hidden');
     const rem = Math.max(0, lv.end.getTime() - Date.now());
     byId('leviHp').textContent=health.hp+' / '+health.maxHp+' · '+Math.max(1,health.hunters||1)+' hunter'+((health.hunters||1)===1?'':'s');
     byId('leviBar').style.width=(health.hp/health.maxHp*100)+'%';
-    byId('leviTimer').textContent = health.hp<=0 ? '🏆 '+(health.winner?health.winner.name:'An angler')+' landed the final catch!' : '⌛ Leviathan swims away in '+mmss(rem/1000);
-    byId('leviCountdown').textContent = health.hp<=0
-      ? '🏆 Leviathan defeated!'
-      : '🦈 '+health.hp+'/'+health.maxHp+' · '+mmss(rem/1000);
+    byId('leviTimer').textContent = '⌛ Leviathan swims away in '+mmss(rem/1000);
+    byId('leviCountdown').textContent = '🦈 '+health.hp+'/'+health.maxHp+' · '+mmss(rem/1000);
   } else {
     byId('leviWrap').classList.add('hidden');
     byId('leviCountWrap').classList.add('hidden');
