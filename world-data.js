@@ -13,7 +13,9 @@ const QUESTS = [
   { id:'diana_letter',  name:'A Simple Letter',          giver:'Diana · Luxian Dunes',       req:[{fish:'Great White Shark'}],         coins:1000, xp:500, emoji:'✉️' },
   { id:'grimbee_trash', name:'Tanglewood Cleanup',       giver:'Grimbee · Tanglewood',       req:[{rarity:'Trash',count:10}],          coins:1000, xp:500, items:{scrap:10},  emoji:'🧹' },
   { id:'harrison_gator',name:'See you later, alligator!',giver:'Harrison · Luxian Crypt',    req:[{fish:'American Alligator'}],        title:'Archaeologist', xp:500, emoji:'🐊' },
-  { id:'detective',     name:"The Detective's Apprentice",giver:'Hemlock · Lighthouse',      req:[{fish:'Halibut'}],                   coins:500,  xp:500, title:'Junior Detective', emoji:'🕵️' },
+  { id:'detective',     name:"The Detective's Apprentice",giver:'Hemlock · Lighthouse',      req:[{fish:'Halibut'}],                   coins:500,  xp:500, title:'Junior Detective', emoji:'🕵️', npc:'hemlock' },
+  { id:'lighthouse_signal',name:'Signals in the Fog',      giver:'Hemlock · Lighthouse',      req:[{fish:'Haddock',count:5}],           coins:1500, xp:750, emoji:'🔦', npc:'hemlock', after:'detective' },
+  { id:'lighthouse_deep',name:'The Shadow Below',          giver:'Hemlock · Lighthouse',      req:[{fish:'Giant Squid'}],               coins:5000, xp:1500, items:{luckP:3}, emoji:'🦑', npc:'hemlock', after:'lighthouse_signal' },
   { id:'breakin',       name:'The Break-in',             giver:'Oga · Luxian Dunes Pyramid', req:[{fish:'Bombfish'},{fish:'Mudskipper'},{fish:'Flame Guppy'}], coins:500, xp:500, unlock:'twilight', emoji:'🧨' },
   { id:'guardian',      name:'Guardian of the Realms',   giver:'Kuzo · Twilight Realm',      req:[{fish:'Tiger Shovelnose Catfish',count:10}], coins:40000, xp:500, emoji:'🏺' },
   { id:'onguard',       name:'On Guard!',                giver:'Kuzo · Twilight Realm',      req:[{fish:'Haddock'},{fish:'Albacore Tuna'},{fish:'Soft Shelled Turtle'},{fish:'Pinnate Batfish'}], coins:50000, xp:500, emoji:'🛡️' },
@@ -101,8 +103,11 @@ const ISLANDS = [
   { id:'luxian',    name:'Luxian Dunes',   x:1780, y:1780, r:370, water:'Freshwater', theme:'desert',   desc:'Golden desert oasis — relics, pyramids & mystery.' },
   { id:'tanglewood',name:'Tanglewood',     x:2920, y:1030, r:330, water:'Swampwater', theme:'swamp',    desc:'Murky swamp waters crawling with gators & ghosts.' },
   { id:'twilight',  name:'Twilight Realm', x:3250, y:2050, r:340, water:'Any',        theme:'twilight', desc:'The land beyond the Pyramid. Unlock: The Break-in.', unlock:'twilight' },
-  { id:'altar',     name:'The Altar',      x:2250, y:330,  r:95,  water:'Saltwater',  theme:'rock',     desc:'Enchant your rod here using relics.' }
+  { id:'altar',     name:'The Altar',      x:2250, y:330,  r:95,  water:'Saltwater',  theme:'rock',     desc:'Enchant your rod here using relics.' },
+  { id:'lighthouse',name:'Lighthouse',     x:3670, y:1110, r:235, water:'Saltwater',  theme:'lighthouse',desc:'Hemlock watches the eastern passage from this storm-beaten light.' }
 ];
+
+const HEMLOCK_SPOT = { x:3615, y:1135 };
 
 /* Special fishing pool types. Game.js selects two and relocates them every
    three minutes using a shared time seed, so all players see one rotation. */

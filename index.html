@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="ANGLER!">
 <title>ANGLER! 🎣 | Sail · Catch · Collect</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎣</text></svg>">
-<link rel="stylesheet" href="style.css?v=bubbles-boss-1">
+<link rel="stylesheet" href="style.css?v=lighthouse-1">
 </head>
 <body>
 
@@ -64,6 +64,7 @@
 
 <!-- Enchant Altar CTA (appears near The Altar) -->
 <button id="btnAltar" class="hidden" onclick="UI.openEnchant()">✨ Enchant Altar</button>
+<button id="btnHemlock" class="hidden" onclick="Game.talkHemlock()">🕵️ Talk to Hemlock</button>
 
 <!-- ===== CONTROLS ===== -->
 <div id="joyZone"><div id="joy"><div id="joyKnob"></div></div></div>
@@ -152,6 +153,18 @@
 
 
 <!-- ================= MODALS ================= -->
+
+<!-- Hemlock lighthouse quest dialogue -->
+<div class="veil hidden" id="veilHemlock">
+  <div class="modal hemlock-modal">
+    <button class="modal-x" onclick="UI.close('veilHemlock')">✕</button>
+    <div class="hemlock-portrait">🕵️</div>
+    <h2>Hemlock</h2>
+    <p class="modal-sub">Lighthouse Keeper &amp; Investigator</p>
+    <div id="hemlockDialogue" class="npc-dialogue"></div>
+    <div class="modal-actions" id="hemlockActions"></div>
+  </div>
+</div>
 
 <!-- Login -->
 <div class="veil veil-login hidden" id="veilName">
@@ -341,12 +354,12 @@
 
 <script src="fish-data.js"></script>
 <script src="gear-data.js"></script>
-<script src="world-data.js?v=bubbles-boss-1"></script>
+<script src="world-data.js?v=lighthouse-1"></script>
 <script src="net.js"></script>
 <script src="multi.js?v=bubbles-boss-1"></script>
 <script src="sound.js"></script>
 <script src="social.js"></script>
-<script src="game.js?v=bubbles-boss-1"></script>
+<script src="game.js?v=lighthouse-1"></script>
 <script src="ui.js"></script>
 </body>
 </html>

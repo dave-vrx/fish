@@ -41,7 +41,7 @@ function freshSave(){
     rod: 'sunleaf', line: 'basic', bobber: 'basic', boat: 'surf',
     ownedRods: ['stick','sunleaf'], ownedLines: ['basic'], ownedBobbers: ['basic'], ownedBoats: ['surf'],
     enchant: null, pity: 0, enchantLog: [],
-    quests: { done: {}, active: {} },
+    quests: { done: {}, active: {}, started:{} },
     titles: { done: {} }, selectedTitle: '',
     codes: {},
     autopets: {}, autoSell: false, autopetStation:null, dailyScrap:{date:'',collected:{}}, badges: {},
@@ -64,7 +64,9 @@ function loadSave(){
     }
     save.autoSell=false;
     save.dailyScrap=Object.assign({date:'',collected:{}},raw.dailyScrap||{});
-    save.quests = Object.assign({done:{},active:{}}, raw.quests||{});
+    save.quests = Object.assign({done:{},active:{},started:{}}, raw.quests||{});
+    save.quests.started=Object.assign({},save.quests.started||{});
+    for(const qid in save.quests.active) if(save.quests.active[qid]) save.quests.started[qid]=true;
     save.titles = Object.assign({done:{}}, raw.titles||{});
     save.selectedTitle = (raw.selectedTitle && save.titles.done[raw.selectedTitle]) ? raw.selectedTitle : '';
     /* Keep the title old saves were already showing selected after this upgrade. */
@@ -846,7 +848,7 @@ function questUnlocked(q){
   return true;
 }
 function activeQuests(){
-  return QUESTS.filter(q => !save.quests.done[q.id] && questUnlocked(q));
+  return QUESTS.filter(q => !save.quests.done[q.id] && questUnlocked(q) && (!q.npc||save.quests.started[q.id]));
 }
 function questProg(q){
   const a = save.quests.active[q.id] || (save.quests.active[q.id] = q.req.map(()=>0));
@@ -883,6 +885,31 @@ function claimQuest(qid){
   toast('✅ Quest complete: '+q.name+'!', 'good');
   UI.refreshQuests();
   Net.bump();
+}
+function nextHemlockQuest(){
+  return QUESTS.find(q=>q.npc==='hemlock'&&!save.quests.done[q.id]&&(!q.after||save.quests.done[q.after]))||null;
+}
+function talkHemlock(){
+  const q=nextHemlockQuest(), dialogue=byId('hemlockDialogue'), actions=byId('hemlockActions');
+  if(!dialogue||!actions) return;
+  if(!q){
+    dialogue.innerHTML='The eastern passage is quiet at last. Fine detective work, partner.';
+    actions.innerHTML='<button class="btn-primary" onclick="UI.close(\'veilHemlock\')">Until next time</button>';
+  }else if(save.quests.started[q.id]){
+    const prog=questProg(q), req=q.req.map((r,i)=>(r.fish||r.rarity||'Trash')+' '+Math.min(prog[i],r.count||1)+'/'+(r.count||1)).join(' · ');
+    dialogue.innerHTML='<b>'+escapeHtml(q.name)+'</b><br>The clues still point seaward. Bring me what we need.<span class="quest-offer">'+escapeHtml(req)+'</span>';
+    actions.innerHTML='<button class="btn-primary" onclick="UI.openQuests()">View quest</button><button class="btn-ghost" onclick="UI.close(\'veilHemlock\')">Close</button>';
+  }else{
+    const lines={detective:'A curious trail washed ashore below the light. Bring me a Halibut and I will show you how a detective reads the sea.',lighthouse_signal:'The beacon keeps catching strange shadows in the fog. Five Haddock should tell us which current they follow.',lighthouse_deep:'One final mystery. Something enormous circles below the eastern passage. Bring me proof: a Giant Squid.'};
+    dialogue.innerHTML=(lines[q.id]||'I have another case for you.')+'<span class="quest-offer">Quest: '+escapeHtml(q.name)+'</span>';
+    actions.innerHTML='<button class="btn-primary" onclick="Game.startHemlockQuest(\''+q.id+'\')">Accept quest</button><button class="btn-ghost" onclick="UI.close(\'veilHemlock\')">Not yet</button>';
+  }
+  byId('veilHemlock').classList.remove('hidden');
+}
+function startHemlockQuest(qid){
+  const q=nextHemlockQuest(); if(!q||q.id!==qid) return;
+  save.quests.started[q.id]=true; questProg(q); persist();
+  UI.close('veilHemlock'); UI.refreshQuests(); toast('🕵️ Quest started: '+q.name,'gold');
 }
 
 /* daily bounties */
@@ -1558,7 +1585,8 @@ const THEME = {
   desert:{ water:'#d8b96a', sand:'#ecd9a4', land:'#d8b96a', dark:'#b39352', decor:'#8a6d33', halo:'#e8cf8a' },
   swamp:{ water:'#3c5a3a', sand:'#5d6b4a', land:'#2f4a2c', dark:'#1d331b', decor:'#12331a', halo:'#6f9a5a' },
   twilight:{ water:'#3b2f6e', sand:'#5c4a8f', land:'#4a3a78', dark:'#2f2452', decor:'#c58cff', halo:'#7a6fd0' },
-  rock:{ water:'#1f7fc2', sand:'#8f8f8f', land:'#6a6a6a', dark:'#4a4a4a', decor:'#b8f2ff', halo:'#79c8ea' }
+  rock:{ water:'#1f7fc2', sand:'#8f8f8f', land:'#6a6a6a', dark:'#4a4a4a', decor:'#b8f2ff', halo:'#79c8ea' },
+  lighthouse:{ water:'#287fa7', sand:'#b8b4a6', land:'#6d806f', dark:'#394d45', decor:'#fff1a8', halo:'#8edaff' }
 };
 /* A taller isometric projection keeps the world readable while giving islands more volume. */
 const WORLD_Y_SCALE=0.64, CAMERA_YAW=-0.42;
@@ -1818,6 +1846,30 @@ function updateIslandSigns(){
       sign.style.left=p.x+'px'; sign.style.top=p.y+'px'; sign.style.transform='translate(-50%,-100%) scale('+scale+')';
     }
   });
+}
+
+function drawLighthouseLandmark(isl){
+  const t=G.frame*.018, x=isl.x+10, y=isl.y-22, beamA=t%(Math.PI*2), lampY=y-102;
+  ctx.save();
+  ctx.globalCompositeOperation='screen';
+  const beam=ctx.createLinearGradient(x,lampY,x+Math.cos(beamA)*420,lampY+Math.sin(beamA)*420);
+  beam.addColorStop(0,'rgba(255,245,170,.46)'); beam.addColorStop(1,'rgba(255,245,170,0)');
+  ctx.fillStyle=beam;ctx.beginPath();ctx.moveTo(x,lampY);ctx.arc(x,lampY,430,beamA-.105,beamA+.105);ctx.closePath();ctx.fill();
+  ctx.globalCompositeOperation='source-over';
+  ctx.fillStyle='rgba(0,20,28,.25)';ctx.beginPath();ctx.ellipse(x+12,y+26,58,22,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#f3eee0';ctx.strokeStyle='#233c47';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x-34,y+25);ctx.lineTo(x-22,y-70);ctx.lineTo(x+22,y-70);ctx.lineTo(x+34,y+25);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#c94d43';ctx.beginPath();ctx.moveTo(x-27,y-35);ctx.lineTo(x+27,y-35);ctx.lineTo(x+30,y-8);ctx.lineTo(x-30,y-8);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#284554';for(let wy=y-57;wy<y+13;wy+=31){ctx.fillRect(x-6,wy,12,17);}
+  ctx.fillStyle='#263e49';ctx.fillRect(x-29,y-76,58,7);
+  ctx.fillStyle='rgba(174,235,255,.86)';ctx.fillRect(x-20,y-96,40,20);ctx.strokeRect(x-20,y-96,40,20);
+  ctx.fillStyle='#bc3e38';ctx.beginPath();ctx.moveTo(x-30,y-97);ctx.lineTo(x,y-116);ctx.lineTo(x+30,y-97);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#fff4a3';ctx.shadowColor='#fff1a0';ctx.shadowBlur=22;ctx.beginPath();ctx.arc(x,lampY,7+Math.sin(t*3)*1.5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  ctx.strokeStyle='#8a6840';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(isl.x-92,isl.y+82);ctx.lineTo(isl.x-132,isl.y+142);ctx.lineTo(isl.x-76,isl.y+164);ctx.stroke();
+  for(let i=0;i<3;i++){const gx=isl.x-72+i*43+Math.sin(t*1.7+i)*7,gy=isl.y-126-i*8;ctx.strokeStyle='rgba(240,250,255,.8)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(gx,gy,10,Math.PI*1.1,Math.PI*1.9);ctx.arc(gx+18,gy,10,Math.PI*1.1,Math.PI*1.9);ctx.stroke();}
+  const hx=HEMLOCK_SPOT.x,hy=HEMLOCK_SPOT.y+Math.sin(t*2)*3;
+  ctx.fillStyle='#172d3c';ctx.fillRect(hx-9,hy-20,18,27);ctx.fillStyle='#d4ad8b';ctx.beginPath();ctx.arc(hx,hy-27,9,0,Math.PI*2);ctx.fill();ctx.fillStyle='#263542';ctx.beginPath();ctx.arc(hx,hy-31,11,Math.PI,0);ctx.fill();ctx.fillRect(hx-15,hy-31,30,4);
+  ctx.font='900 11px system-ui,sans-serif';ctx.textAlign='center';ctx.fillStyle='#e7f8ff';ctx.strokeStyle='#09202d';ctx.lineWidth=3;ctx.strokeText('HEMLOCK',hx,hy-46);ctx.fillText('HEMLOCK',hx,hy-46);
+  ctx.restore();
 }
 
 /* ---------------- special pool shaders ---------------- */
@@ -2166,13 +2218,14 @@ function drawIslands(){
       ctx.beginPath(); ctx.arc(isl.x, isl.y - r*0.05, r*0.5, 0, Math.PI*2); ctx.fill();
     }
     const shim = 0.85 + 0.15*Math.sin(G.frame*0.04 + i*3);
-    ISL_TREES[i].forEach(t => {
+    (isl.theme==='lighthouse'?[]:ISL_TREES[i]).forEach(t => {
       if(isl.theme === 'desert') drawCactus(t.x, t.y, t.s);
       else if(isl.theme === 'twilight') drawCrystal(t.x, t.y, t.s);
       else if(isl.theme === 'volcanic') drawCinder(t.x, t.y, t.s);
       else if(isl.theme === 'swamp') drawSwampTree(t.x, t.y, t.s);
       else drawPalm(t.x, t.y, t.s, t.a);
     });
+    if(isl.id==='lighthouse') drawLighthouseLandmark(isl);
     if(isl.name === 'Coconut Bay'){
       const hx = isl.x - r*0.06, hy = isl.y - r*0.42;
       ctx.fillStyle = 'rgba(0,10,20,.18)';
@@ -2309,6 +2362,11 @@ function updateAltarBtn(){
   const nearAltar = alt && Math.hypot(actor.x-alt.x, actor.y-alt.y) < alt.r*1.4;
   const altBtn = byId('btnAltar');
   if(altBtn) altBtn.classList.toggle('hidden', !nearAltar);
+}
+function updateHemlockBtn(){
+  const btn=byId('btnHemlock'); if(!btn) return;
+  const near=G.player.onFoot&&Math.hypot(G.player.x-HEMLOCK_SPOT.x,G.player.y-HEMLOCK_SPOT.y)<105;
+  btn.classList.toggle('hidden',!near);
 }
 function updateLandButton(){
   const btn=byId('btnLand'); if(!btn) return;
@@ -2725,6 +2783,7 @@ function loop(t){
     if(leviStatus().active && window.Net) Net.refreshLeviathan(leviHunterCount());
   }
   updateAltarBtn();
+  updateHemlockBtn();
   updateLandButton();
   const focus=G.player.onFoot?G.player:G.boat;
   G.cam.x += (focus.x - G.cam.x) * Math.min(1, delta*5);
@@ -2772,7 +2831,7 @@ const Game = {
   save, G, MASTER, BY_LOC, BY_NAME, RARITY_ORDER, RARITIES, MUTATIONS,
   curRod, curEnchant, statSums, detectLoc, cast, sellFish, sellAll, sellItem, useItem,
   buyGear, equipGear, buyBoat, equipBoat, boatRoulette, doEnchant, redeemCode,
-  claimQuest, claimBounty, genBounties, updateBounties, questUnlocked, activeQuests, questProg,
+  claimQuest, claimBounty, genBounties, updateBounties, questUnlocked, activeQuests, questProg, talkHemlock, startHemlockQuest,
   grantTitle, equipTitle, checkTitle, checkIndexCompletion, addXp, xpNeed, addItem,
   itemCanShow, leviStatus, leviHealth, leviHunterCount, relicToKey, locName, effLuck, effAtt, fishValue, toggleLand,
   deployAutopet, collectAutopet, recallAutopet, autopetAction, collectDailyScrap,

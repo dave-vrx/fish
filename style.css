@@ -158,6 +158,10 @@ input{font-family:inherit}
 #btnLand{position:fixed;right:104px;bottom:calc(var(--nav-h) + 82px + var(--safe-b));z-index:8;display:flex;align-items:center;gap:5px;padding:9px 12px;border-radius:999px;background:linear-gradient(180deg,#5be5bd,#207b63);border:2px solid #b7ffe8;color:#032c25;box-shadow:0 5px 16px rgba(32,123,99,.55);font-size:13px;font-weight:900}
 #btnLand.board{background:linear-gradient(180deg,#a7d8ff,#367ec0);border-color:#d9f0ff;color:#062946}
 #btnLand span{font-size:10px;letter-spacing:.6px}
+#btnHemlock{position:fixed;right:104px;bottom:calc(var(--nav-h) + 128px + var(--safe-b));z-index:8;padding:10px 14px;border:2px solid #d7f4ff;border-radius:999px;background:linear-gradient(180deg,#f5fbff,#78a9c5);color:#102d40;font-size:12px;font-weight:900;box-shadow:0 5px 18px rgba(80,175,225,.48);animation:hemlockPrompt 1.8s ease-in-out infinite}
+@keyframes hemlockPrompt{50%{transform:translateY(-3px);box-shadow:0 8px 24px rgba(122,211,255,.65)}}
+.hemlock-modal{text-align:center;max-width:420px}.hemlock-portrait{display:grid;place-items:center;width:72px;height:72px;margin:0 auto 8px;border:2px solid #bdeaff;border-radius:50%;background:radial-gradient(circle at 35% 30%,#e7f8ff,#47728f 68%,#17364b);font-size:38px;box-shadow:0 0 24px rgba(102,201,255,.35)}
+.npc-dialogue{margin-top:12px;padding:14px;border:1px solid rgba(154,220,255,.35);border-radius:12px;background:rgba(5,28,44,.75);color:#dff5ff;font-size:13px;line-height:1.55;text-align:left}.npc-dialogue b{color:#ffe09a}.npc-dialogue .quest-offer{display:block;margin-top:8px;color:#8ee8ff;font-weight:800}
 #btnPet{position:fixed;z-index:11;display:flex;align-items:center;gap:6px;min-height:42px;padding:9px 13px;border-radius:999px;background:linear-gradient(180deg,#42d9ef,#167c9c);border:2px solid #baf7ff;color:#032b38;box-shadow:0 6px 20px rgba(30,181,211,.5);font-size:17px;font-weight:900;white-space:nowrap}
 #btnPet span{font-size:10px;letter-spacing:.5px}
 #btnPet.pet-near{transform:translate(-50%,-100%)}
