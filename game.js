@@ -98,7 +98,7 @@ const G = {
   fish: { state:'idle', pool:null, t:0, biteAt:0, game:null, catch:null },
   effects: [], sparkles: [],
   blockedIsland: null,
-  saveTimer: 0, hudTimer: 0, mmTimer: 0, leviSyncTimer: 0, specialPoolSlot: -1, pinkTrailTimer: 0, witchTrailTimer: 0, jackTrailTimer: 0, betaTrailTimer: 0, betaTrailIndex: 0, weatherDur: 0,
+  saveTimer: 0, hudTimer: 0, mmTimer: 0, leviSyncTimer: 0, leviAnnouncedHour: '', specialPoolSlot: -1, pinkTrailTimer: 0, witchTrailTimer: 0, jackTrailTimer: 0, betaTrailTimer: 0, betaTrailIndex: 0, weatherDur: 0,
   frame: 0
 };
 const Fishing = { lastBiteCheck:0, held:false, lastStatus:'' };
@@ -189,6 +189,19 @@ function leviHealth(){
   const maxHp=event.maxHp||fallback;
   return {hp:Math.max(0,Math.min(maxHp,event.hp==null?maxHp:event.hp)),maxHp,hunters,winner:event.winner||null};
 }
+function leviDefeated(){
+  const event=G.state.levi;
+  return !!(event&&event.hp<=0);
+}
+function announceLeviathanDefeat(health){
+  const event=G.state.levi;
+  if(!event||health.hp>0||G.leviAnnouncedHour===event.hour) return;
+  G.leviAnnouncedHour=event.hour;
+  const winner=health.winner&&health.winner.name ? health.winner.name : 'An angler';
+  if(window.Multi&&Multi.showSystemAnnouncement){
+    Multi.showSystemAnnouncement('🏆 BABY LEVIATHAN DEFEATED! '+winner+' landed the final catch!');
+  }
+}
 function leviHunterCount(){
   let n=0;
   if(Math.hypot(G.boat.x-LEVIATHAN_SPOT.x,G.boat.y-LEVIATHAN_SPOT.y)<LEVIATHAN_SPOT.r) n++;
@@ -208,7 +221,7 @@ function detectLoc(){
     if(d < isl.r*0.85) return { name:isl.name, island:isl };
   }
   const lv = leviStatus();
-  if(lv.active){
+  if(lv.active&&!leviDefeated()){
     const d = Math.hypot(b.x-LEVIATHAN_SPOT.x, b.y-LEVIATHAN_SPOT.y);
     if(d < LEVIATHAN_SPOT.r) return { name:'Leviathan', levi:true, pool:'Leviathan' };
   }
@@ -1449,13 +1462,16 @@ function updateHud(){
   const lv = leviStatus();
   if(lv.active){
     const health=leviHealth();
+    announceLeviathanDefeat(health);
     byId('leviWrap').classList.remove('hidden');
     byId('leviCountWrap').classList.remove('hidden');
     const rem = Math.max(0, lv.end.getTime() - Date.now());
     byId('leviHp').textContent=health.hp+' / '+health.maxHp+' · '+Math.max(1,health.hunters||1)+' hunter'+((health.hunters||1)===1?'':'s');
     byId('leviBar').style.width=(health.hp/health.maxHp*100)+'%';
     byId('leviTimer').textContent = health.hp<=0 ? '🏆 '+(health.winner?health.winner.name:'An angler')+' landed the final catch!' : '⌛ Leviathan swims away in '+mmss(rem/1000);
-    byId('leviCountdown').textContent = '🦈 '+health.hp+'/'+health.maxHp+' · '+mmss(rem/1000);
+    byId('leviCountdown').textContent = health.hp<=0
+      ? '🏆 Leviathan defeated!'
+      : '🦈 '+health.hp+'/'+health.maxHp+' · '+mmss(rem/1000);
   } else {
     byId('leviWrap').classList.add('hidden');
     byId('leviCountWrap').classList.add('hidden');
@@ -2145,7 +2161,7 @@ function drawIslands(){
   });
 
   const lv = leviStatus();
-  if(lv.active){
+  if(lv.active&&!leviDefeated()){
     /* The event is decorative; a rendering fault must never stop the ocean. */
     try{ drawBabyLeviathan(LEVIATHAN_SPOT, leviHealth()); }
     catch(e){ console.error('Baby Leviathan render failed:', e); }
@@ -2551,7 +2567,7 @@ function drawMinimap(){
     mctx.fillText((AUTOPETS[s.pet]&&AUTOPETS[s.pet].emoji)||'🐾',s.x*sx,s.y*sy+3);
   }
   const lv = leviStatus();
-  if(lv.active){
+  if(lv.active&&!leviDefeated()){
     mctx.fillStyle = 'rgba(255,80,90,.8)';
     mctx.beginPath(); mctx.arc(LEVIATHAN_SPOT.x*sx, LEVIATHAN_SPOT.y*sy, 4, 0, Math.PI*2); mctx.fill();
   }
