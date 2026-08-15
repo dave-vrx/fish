@@ -302,6 +302,7 @@ const AUTOPET_CAPACITY=100, AUTOPET_CAST_TIME=30, AUTOPET_COLLECT_RANGE=175;
 function deployAutopet(id){
   if(!save.autopets[id] || !AUTOPETS[id]) return;
   if(save.autopetStation){ toast('🐾 Recall your deployed Autopet first.','bad'); return; }
+  if(G.fish.state!=='idle'){ toast('🎣 Finish fishing before deploying your Autopet.','bad'); return; }
   if(G.player.onFoot){ toast('🚤 Board your boat before deploying an Autopet.','bad'); return; }
   if(detectLoc().island){ toast('🌊 Sail into open water before deploying it.','bad'); return; }
   const b=G.boat, side=105;
@@ -345,14 +346,37 @@ function recallAutopet(){
   if(save.autopetStation.caught.length){ collectAutopet(); if(save.autopetStation.caught.length) return; }
   save.autopetStation=null; persist(); UI.refreshInv(); updateAutopetButton(); toast('🐾 Autopet recalled.','good');
 }
+function ownedAutopetId(){
+  return Object.keys(AUTOPETS).find(id=>save.autopets[id])||null;
+}
+function autopetAction(){
+  const s=save.autopetStation;
+  if(!s){
+    const id=ownedAutopetId();
+    if(!id){ toast('🔒 Unlock an Autopet by hatching Lucia’s Ominous Egg quest reward.','bad'); return; }
+    deployAutopet(id); return;
+  }
+  if(autopetNearby()){ collectAutopet(); return; }
+  toast('🐾 Your Autopet is marked on the minimap — sail close to collect '+s.caught.length+'/100 fish.','gold');
+}
 function updateAutopetButton(){
   const btn=byId('btnPet'), s=save.autopetStation; if(!btn) return;
   const near=autopetNearby(); btn.classList.toggle('hidden',!near);
-  if(!near || !s) return;
-  const p=worldToScreen(s.x,s.y), count=s.caught.length;
-  btn.style.left=Math.max(74,Math.min(W-74,p.x))+'px';
-  btn.style.top=Math.max(78,Math.min(H-150,p.y-58))+'px';
-  byId('petBtnLbl').textContent=count ? 'COLLECT '+count+'/100' : 'NEXT '+Math.ceil(s.timer)+'s';
+  const aboardIdle=!G.player.onFoot&&G.fish.state==='idle';
+  const showDock=!near&&(!!s||aboardIdle);
+  btn.classList.toggle('hidden',!(near||showDock));
+  btn.classList.toggle('pet-near',near);
+  btn.classList.toggle('pet-dock',showDock);
+  if(near&&s){
+    const p=worldToScreen(s.x,s.y), count=s.caught.length;
+    btn.style.left=Math.max(74,Math.min(W-74,p.x))+'px';
+    btn.style.top=Math.max(78,Math.min(H-150,p.y-58))+'px';
+    byId('petBtnLbl').textContent=count?'COLLECT '+count+'/100':'NEXT '+Math.ceil(s.timer)+'s';
+  }else{
+    btn.style.removeProperty('left'); btn.style.removeProperty('top');
+    const onIsland=!!detectLoc().island;
+    byId('petBtnLbl').textContent=s?'FIND '+s.caught.length+'/100':(ownedAutopetId()?(onIsland?'SAIL OUT':'DEPLOY'):'LOCKED');
+  }
 }
 
 function pickFromWeighted(pairs){
@@ -2580,7 +2604,7 @@ const Game = {
   claimQuest, claimBounty, genBounties, updateBounties, questUnlocked, activeQuests, questProg,
   grantTitle, equipTitle, checkTitle, checkIndexCompletion, addXp, xpNeed, addItem,
   itemCanShow, leviStatus, leviHealth, leviHunterCount, relicToKey, locName, effLuck, effAtt, fishValue, toggleLand,
-  deployAutopet, collectAutopet, recallAutopet,
+  deployAutopet, collectAutopet, recallAutopet, autopetAction,
   updateHud, resetSave, questMap: ()=>QUESTS,
   titles: ()=>TITLES, codes: ()=>CODES, poolMods: POOL_MODS,
   activeSpecialPools: ()=>POOLS.map(p=>Object.assign({},p)),
