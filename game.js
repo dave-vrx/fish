@@ -1436,7 +1436,16 @@ function updateHud(){
   byId('hudTime').textContent = (TIME_ICONS[G.state.time]||'');
   const loc = G.curLoc || detectLoc();
   byId('locName').textContent = loc.name;
-  byId('locPool').textContent = loc.pool && POOL_MODS[loc.pool] ? POOL_MODS[loc.pool].desc : (loc.levi ? 'The baby leviathan stirs…' : '');
+  const poolText=loc.pool&&POOL_MODS[loc.pool]?POOL_MODS[loc.pool].desc:(loc.levi?'The baby leviathan stirs…':'');
+  byId('locPool').textContent=poolText;
+  byId('locPool').classList.toggle('hidden',!poolText);
+  const indexLoc=loc.levi?'Leviathan':(loc.pool?'Open Sea':loc.name);
+  const locationFish=BY_LOC[indexLoc]||BY_LOC['Open Sea']||[];
+  const found=locationFish.reduce((n,f)=>n+(save.index[f.name]?1:0),0), total=locationFish.length;
+  const pct=total?Math.round(found/total*100):0;
+  byId('locIndexFill').style.width=pct+'%';
+  byId('locIndexText').textContent=found+' / '+total+' · '+pct+'%';
+  byId('locIndex').setAttribute('aria-label',indexLoc+' fish index: '+pct+' percent complete');
   const lv = leviStatus();
   if(lv.active){
     const health=leviHealth();

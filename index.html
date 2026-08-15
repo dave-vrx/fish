@@ -45,7 +45,11 @@
 <div id="leviCountWrap" class="hidden"><span id="leviCountdown">--</span></div>
 
 <!-- Current location tag -->
-<div id="locTag"><span id="locName">Coconut Bay</span><span id="locPool"></span></div>
+<div id="locTag">
+  <span id="locName">Coconut Bay</span>
+  <span id="locPool" class="hidden"></span>
+  <div id="locIndex" class="loc-index" aria-label="Location fish index progress"><i id="locIndexFill"></i><b id="locIndexText">0 / 0 · 0%</b></div>
+</div>
 <div id="landAvatar" class="hidden"><div class="land-name" id="landName"></div><div class="land-title" id="landTitle"></div><div class="land-walker" id="landWalker"><i class="avatar-aura"></i><i class="avatar-halo"></i><i class="avatar-hair"></i><i class="avatar-head"></i><i class="avatar-beard"></i><i class="avatar-body"></i><i class="avatar-arm avatar-arm-l"></i><i class="avatar-arm avatar-arm-r"></i><i class="avatar-leg avatar-leg-l"></i><i class="avatar-leg avatar-leg-r"></i></div></div>
 <div id="islandSignLayer" aria-hidden="true"></div>
 <div id="scrapLayer" aria-label="Daily island scrap"></div>
@@ -334,7 +338,7 @@
 <script src="multi.js"></script>
 <script src="sound.js"></script>
 <script src="social.js"></script>
-<script src="game.js?v=autopet-pickup-1"></script>
+<script src="game.js?v=location-index-meter-1"></script>
 <script src="ui.js"></script>
 </body>
 </html>
