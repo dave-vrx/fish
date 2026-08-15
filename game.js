@@ -411,8 +411,9 @@ function autopetAction(){
   toast('🐾 Your Autopet is marked on the minimap — sail close to collect '+s.caught.length+'/100 fish.','gold');
 }
 function updateAutopetButton(){
-  const btn=byId('btnPet'), s=save.autopetStation; if(!btn) return;
+  const btn=byId('btnPet'), pickup=byId('btnPetPickup'), s=save.autopetStation; if(!btn||!pickup) return;
   const near=autopetNearby(); btn.classList.toggle('hidden',!near);
+  pickup.classList.toggle('hidden',!near);
   const aboardIdle=!G.player.onFoot&&G.fish.state==='idle';
   const showDock=!near&&(!!s||aboardIdle);
   btn.classList.toggle('hidden',!(near||showDock));
@@ -422,9 +423,12 @@ function updateAutopetButton(){
     const p=worldToScreen(s.x,s.y), count=s.caught.length;
     btn.style.left=Math.max(74,Math.min(W-74,p.x))+'px';
     btn.style.top=Math.max(78,Math.min(H-150,p.y-58))+'px';
+    pickup.style.left=Math.max(74,Math.min(W-74,p.x))+'px';
+    pickup.style.top=Math.max(126,Math.min(H-96,p.y-8))+'px';
     byId('petBtnLbl').textContent=count?'COLLECT '+count+'/100':'NEXT '+Math.ceil(s.timer)+'s';
   }else{
     btn.style.removeProperty('left'); btn.style.removeProperty('top');
+    pickup.style.removeProperty('left'); pickup.style.removeProperty('top');
     const onIsland=!!detectLoc().island;
     byId('petBtnLbl').textContent=s?'FIND '+s.caught.length+'/100':(ownedAutopetId()?(onIsland?'SAIL OUT':'DEPLOY'):'LOCKED');
   }
