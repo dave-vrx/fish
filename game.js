@@ -911,6 +911,38 @@ function startHemlockQuest(qid){
   save.quests.started[q.id]=true; questProg(q); persist();
   UI.close('veilHemlock'); UI.refreshQuests(); toast('🕵️ Quest started: '+q.name,'gold');
 }
+function nearPristina(){
+  return G.player.onFoot&&Math.hypot(G.player.x-PRISTINA_SPOT.x,G.player.y-PRISTINA_SPOT.y)<105;
+}
+function cursedFishIndexes(){
+  const out=[]; save.caught.forEach((c,i)=>{if(c&&c.mut==='Cursed')out.push(i);}); return out;
+}
+function renderPristina(){
+  const box=byId('pristinaFish'),actions=byId('pristinaActions');if(!box||!actions)return;
+  const indexes=cursedFishIndexes();
+  if(!indexes.length){
+    box.innerHTML='<div class="purify-empty">You have no Cursed fish to purify.</div>';
+    actions.innerHTML='<button class="btn-primary" onclick="UI.close(\'veilPristina\')">Blessings upon you</button>';return;
+  }
+  box.innerHTML=indexes.map(i=>{const c=save.caught[i],before=fishValue(c),after=Math.max(before+1,Math.round(before*3/1.1));return '<div class="purify-row"><span>🐟</span><span class="purify-name">'+escapeHtml(c.name)+'</span><span class="purify-value">$'+fmt(before)+' → $'+fmt(after)+'</span><button onclick="Game.purifyFish('+i+')">Purify</button></div>';}).join('');
+  actions.innerHTML='<button class="btn-primary" onclick="Game.purifyAllFish()">✨ Purify all ('+indexes.length+')</button><button class="btn-ghost" onclick="UI.close(\'veilPristina\')">Close</button>';
+}
+function talkPristina(){
+  if(!nearPristina()){toast('⛪ Walk inside the Tanglewood church to speak with Pristina.','bad');return;}
+  renderPristina();byId('veilPristina').classList.remove('hidden');
+}
+function purifyFish(index,silent){
+  if(!nearPristina())return false;
+  const c=save.caught[index];if(!c||c.mut!=='Cursed')return false;
+  c.val=Math.max(fishValue(c)+1,Math.round(Number(c.val||1)*3/1.1));c.mut='Blessed';c.purified=true;
+  persist();UI.refreshInv();if(!silent)toast('✨ '+c.name+' was purified into Blessed!','gold');renderPristina();return true;
+}
+function purifyAllFish(){
+  if(!nearPristina())return;
+  const indexes=cursedFishIndexes();let count=0;
+  for(let i=indexes.length-1;i>=0;i--)if(purifyFish(indexes[i],true))count++;
+  if(count)toast('✨ Pristina purified '+count+' Cursed fish into Blessed!','gold');renderPristina();
+}
 
 /* daily bounties */
 const BOUNTY_REWARD = { Abundant:300, Common:400, Curious:600, Elusive:900, Fabled:1400, Mythic:2000, Exotic:2800, Relic:2200, Secret:5000 };
@@ -1872,6 +1904,23 @@ function drawLighthouseLandmark(isl){
   ctx.restore();
 }
 
+function drawTanglewoodChurch(isl){
+  const t=G.frame*.025,x=isl.x+55,y=isl.y-92,pulse=.5+.5*Math.sin(t*2.2);
+  ctx.save();
+  ctx.fillStyle='rgba(4,13,8,.35)';ctx.beginPath();ctx.ellipse(x+8,y+38,72,27,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#25242d';ctx.strokeStyle='#11151a';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x-48,y+34);ctx.lineTo(x-48,y-34);ctx.lineTo(x+45,y-34);ctx.lineTo(x+45,y+34);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#4b3a55';ctx.beginPath();ctx.moveTo(x-58,y-34);ctx.lineTo(x-2,y-73);ctx.lineTo(x+56,y-34);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#181923';ctx.fillRect(x-13,y-72,28,51);ctx.beginPath();ctx.moveTo(x-20,y-72);ctx.lineTo(x+1,y-101);ctx.lineTo(x+22,y-72);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#713f7e';ctx.fillRect(x-11,y+2,23,32);ctx.fillStyle='#c098d0';ctx.beginPath();ctx.arc(x,y-13,10,Math.PI,0);ctx.lineTo(x+10,y);ctx.lineTo(x-10,y);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#f7e985';ctx.shadowColor='#d96cff';ctx.shadowBlur=14+12*pulse;ctx.beginPath();ctx.ellipse(x+1,y-78,9+2*pulse,6,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#25142d';ctx.beginPath();ctx.arc(x+1,y-78,3,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  ctx.strokeStyle='rgba(205,125,240,'+(.2+.25*pulse)+')';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x+1,y-78,17+5*pulse,0,Math.PI*2);ctx.stroke();
+  for(let i=0;i<4;i++){const gx=x-72+i*43,gy=y+55+(i%2)*8;ctx.strokeStyle='#4e5360';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(gx,gy+16);ctx.lineTo(gx,gy-10);ctx.lineTo(gx+9,gy-10);ctx.stroke();}
+  const px=PRISTINA_SPOT.x,py=PRISTINA_SPOT.y+Math.sin(t*2)*2;
+  ctx.fillStyle='#ece7ef';ctx.beginPath();ctx.moveTo(px-12,py+9);ctx.lineTo(px-8,py-22);ctx.lineTo(px+8,py-22);ctx.lineTo(px+12,py+9);ctx.closePath();ctx.fill();ctx.fillStyle='#c99f80';ctx.beginPath();ctx.arc(px,py-29,8,0,Math.PI*2);ctx.fill();ctx.fillStyle='#2a1c31';ctx.fillRect(px-9,py-36,18,5);
+  ctx.font='900 10px system-ui,sans-serif';ctx.textAlign='center';ctx.fillStyle='#f3deff';ctx.strokeStyle='#160b1c';ctx.lineWidth=3;ctx.strokeText('PRISTINA',px,py-46);ctx.fillText('PRISTINA',px,py-46);
+  ctx.restore();
+}
+
 /* ---------------- special pool shaders ---------------- */
 const POOL_PARTS = {};
 function poolParts(i){
@@ -2226,6 +2275,7 @@ function drawIslands(){
       else drawPalm(t.x, t.y, t.s, t.a);
     });
     if(isl.id==='lighthouse') drawLighthouseLandmark(isl);
+    if(isl.id==='tanglewood') drawTanglewoodChurch(isl);
     if(isl.name === 'Coconut Bay'){
       const hx = isl.x - r*0.06, hy = isl.y - r*0.42;
       ctx.fillStyle = 'rgba(0,10,20,.18)';
@@ -2367,6 +2417,9 @@ function updateHemlockBtn(){
   const btn=byId('btnHemlock'); if(!btn) return;
   const near=G.player.onFoot&&Math.hypot(G.player.x-HEMLOCK_SPOT.x,G.player.y-HEMLOCK_SPOT.y)<105;
   btn.classList.toggle('hidden',!near);
+}
+function updatePristinaBtn(){
+  const btn=byId('btnPristina');if(btn)btn.classList.toggle('hidden',!nearPristina());
 }
 function updateLandButton(){
   const btn=byId('btnLand'); if(!btn) return;
@@ -2784,6 +2837,7 @@ function loop(t){
   }
   updateAltarBtn();
   updateHemlockBtn();
+  updatePristinaBtn();
   updateLandButton();
   const focus=G.player.onFoot?G.player:G.boat;
   G.cam.x += (focus.x - G.cam.x) * Math.min(1, delta*5);
@@ -2832,6 +2886,7 @@ const Game = {
   curRod, curEnchant, statSums, detectLoc, cast, sellFish, sellAll, sellItem, useItem,
   buyGear, equipGear, buyBoat, equipBoat, boatRoulette, doEnchant, redeemCode,
   claimQuest, claimBounty, genBounties, updateBounties, questUnlocked, activeQuests, questProg, talkHemlock, startHemlockQuest,
+  talkPristina, purifyFish, purifyAllFish,
   grantTitle, equipTitle, checkTitle, checkIndexCompletion, addXp, xpNeed, addItem,
   itemCanShow, leviStatus, leviHealth, leviHunterCount, relicToKey, locName, effLuck, effAtt, fishValue, toggleLand,
   deployAutopet, collectAutopet, recallAutopet, autopetAction, collectDailyScrap,
