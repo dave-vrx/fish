@@ -121,8 +121,14 @@ const Multi = (()=>{
   }
   function showAnnouncement(a){
     const el=byId('globalAnnouncement'); if(!el) return;
-    el.textContent='📣 '+String(a.name||'DAVE').slice(0,16)+': '+String(a.text||'').slice(0,160); el.classList.remove('hidden');
+    el.textContent=a.system
+      ? String(a.text||'').slice(0,200)
+      : '📣 '+String(a.name||'DAVE').slice(0,16)+': '+String(a.text||'').slice(0,160);
+    el.classList.remove('hidden');
     clearTimeout(showAnnouncement.timer); showAnnouncement.timer=setTimeout(()=>el.classList.add('hidden'),11000);
+  }
+  function showSystemAnnouncement(text){
+    showAnnouncement({system:true,text});
   }
   function sendAnnouncement(text){
     if(!isDave()){ toast('Announcements are reserved for Dave.','bad'); return; }
@@ -413,7 +419,7 @@ const Multi = (()=>{
   }
   function init(){ start(); }
 
-  return { init, start, toggle, openAnnouncer, send:sendChat, announce:sendAnnouncement, tick, draw,
+  return { init, start, toggle, openAnnouncer, send:sendChat, announce:sendAnnouncement, showSystemAnnouncement, tick, draw,
     get online(){ return online; }, get players(){ return players; }, get open(){ return open; } };
 })();
 window.Multi=Multi;
