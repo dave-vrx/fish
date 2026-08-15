@@ -73,6 +73,7 @@ const CODES = [
   { code:'STPADDYS',  reward:'5x Luck Potion + 25x Token',       active:false, items:{luckP:5} },
   { code:'LEVIATHAN', reward:'5x Speed Potion + 5x Mossy Relic', active:false, items:{speedP:5,relicMos:5} },
   { code:'MAKESHIP',  reward:'Vlad Autopet',                     active:false, items:{autopet:'vlad'} },
+  { code:'PET',       reward:'Leviathan Autopet',                active:true, hidden:true, items:{autopet:'levi'} },
   { code:'SKULL',     reward:'Skullcrusher boat + BETA TESTER title', active:true, hidden:true, boats:['skull'], titles:['BETA TESTER'], badges:['betaTester'] },
   { code:'PINKFONG',  reward:'Pinkfong boat + PINKFONG! title', active:true, hidden:true, boats:['pinkfong'], titles:['PINKFONG!'], badges:['pinkfong'] },
   { code:'WITCHY',    reward:'Moonlit Sleep Token vessel + WITCHY title', active:true, hidden:true, boats:['witchy'], titles:['WITCHY'], badges:['witchy'], avatar:{gender:'female',skin:'fair',hair:'long',hairColor:'black',outfit:'violet',special:'witchy'} },
