@@ -146,6 +146,8 @@ input{font-family:inherit}
 #btnLand{position:fixed;right:104px;bottom:calc(var(--nav-h) + 82px + var(--safe-b));z-index:8;display:flex;align-items:center;gap:5px;padding:9px 12px;border-radius:999px;background:linear-gradient(180deg,#5be5bd,#207b63);border:2px solid #b7ffe8;color:#032c25;box-shadow:0 5px 16px rgba(32,123,99,.55);font-size:13px;font-weight:900}
 #btnLand.board{background:linear-gradient(180deg,#a7d8ff,#367ec0);border-color:#d9f0ff;color:#062946}
 #btnLand span{font-size:10px;letter-spacing:.6px}
+#btnPet{position:fixed;z-index:11;transform:translate(-50%,-100%);display:flex;align-items:center;gap:6px;min-height:42px;padding:9px 13px;border-radius:999px;background:linear-gradient(180deg,#42d9ef,#167c9c);border:2px solid #baf7ff;color:#032b38;box-shadow:0 6px 20px rgba(30,181,211,.5);font-size:17px;font-weight:900;white-space:nowrap}
+#btnPet span{font-size:10px;letter-spacing:.5px}
 
 /* ============ FISHING UI ============ */
 #fishUI{

@@ -307,7 +307,12 @@ const UI = {
     for(const p in G.save.autopets){
       if(!G.save.autopets[p]) continue;
       const ap = AUTOPETS[p];
-      ih += '<div class="item-card" style="border-color:var(--gold)"><div class="ic-ico">'+(ap?ap.emoji:'🐾')+'</div><div class="ic-name">'+(ap?ap.name:p)+'</div><span style="font-size:9px;color:var(--gold);font-weight:800">AUTOPET</span></div>';
+      const station=G.save.autopetStation, deployed=station&&station.pet===p;
+      const status=deployed ? station.caught.length+'/100 caught' : 'Ready to deploy';
+      const action=deployed
+        ? '<button onclick="Game.recallAutopet()">Recall nearby</button>'
+        : '<button onclick="Game.deployAutopet(\''+p+'\');UI.close(\'veilInv\')">Deploy</button>';
+      ih += '<div class="item-card" style="border-color:var(--gold)"><div class="ic-ico">'+(ap?ap.emoji:'🐾')+'</div><div class="ic-name">'+(ap?ap.name:p)+'</div><span style="font-size:9px;color:var(--gold);font-weight:800">'+status+'</span>'+action+'</div>';
     }
     items.innerHTML = ih || '<div class="lb-empty">No items.</div>';
   },
@@ -517,18 +522,11 @@ const UI = {
   openHelp(){
     UI.closeAllVeils();
     byId('veilHelp').classList.remove('hidden');
-    byId('autoSellLbl').textContent = '🤖 Auto-Sell: ' + (G.save.autoSell ? 'ON' : 'OFF');
+    const station=G.save.autopetStation;
+    byId('autoSellLbl').textContent = station ? '🐾 Autopet: '+station.caught.length+'/100 caught' : '🐾 Autopet: open inventory';
     byId('soundLbl').textContent = '🔊 Sound: ' + (G.save.sound ? 'ON' : 'OFF');
     const hasPet = G.save.autopets.vlad || G.save.autopets.levi;
-    if(!hasPet) byId('autoSellLbl').textContent = '🤖 Auto-Sell: need an Autopet';
-  },
-  toggleAutoSell(){
-    const hasPet = G.save.autopets.vlad || G.save.autopets.levi;
-    if(!hasPet){ toast('You need an Autopet first — Vlad (MAKESHIP code) or hatch the Leviathan Egg!', 'bad'); return; }
-    G.save.autoSell = !G.save.autoSell;
-    Game.persist();
-    byId('autoSellLbl').textContent = '🤖 Auto-Sell: ' + (G.save.autoSell ? 'ON' : 'OFF');
-    toast('🤖 Auto-sell ' + (G.save.autoSell ? 'enabled' : 'disabled'), 'good');
+    if(!hasPet) byId('autoSellLbl').textContent = '🐾 Autopet: not unlocked';
   },
   toggleSound(){
     G.save.sound = !G.save.sound;

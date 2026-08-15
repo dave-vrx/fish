@@ -44,7 +44,7 @@ function freshSave(){
     quests: { done: {}, active: {} },
     titles: { done: {} }, selectedTitle: '',
     codes: {},
-    autopets: {}, autoSell: false, badges: {},
+    autopets: {}, autoSell: false, autopetStation:null, badges: {},
     avatar: { gender:'female', skin:'warm', hair:'long', hairColor:'brown', outfit:'teal' },
     potionLuck: 0, potionSpeed: 0,
     bounties: { date: '', list: [] },
@@ -58,6 +58,11 @@ function loadSave(){
   try{ raw = JSON.parse(localStorage.getItem(SAVE_KEY)); }catch(e){}
   if(raw && raw.ver){
     save = Object.assign(freshSave(), raw);
+    if(save.autopetStation){
+      save.autopetStation.caught=Array.isArray(save.autopetStation.caught)?save.autopetStation.caught:[];
+      save.autopetStation.timer=Math.max(0,Number(save.autopetStation.timer)||0);
+    }
+    save.autoSell=false;
     save.quests = Object.assign({done:{},active:{}}, raw.quests||{});
     save.titles = Object.assign({done:{}}, raw.titles||{});
     save.selectedTitle = (raw.selectedTitle && save.titles.done[raw.selectedTitle]) ? raw.selectedTitle : '';
@@ -212,6 +217,15 @@ function detectLoc(){
   }
   return { name:OPEN_SEA.name, sea:true };
 }
+function detectLocAt(x,y){
+  for(const isl of ISLANDS){
+    if(Math.hypot(x-isl.x,y-isl.y) < isl.r*.85) return {name:isl.name,island:isl};
+  }
+  for(const p of POOLS){
+    if(Math.hypot(x-p.x,y-p.y) < p.r) return {name:p.name,pool:p.name};
+  }
+  return {name:OPEN_SEA.name,sea:true};
+}
 
 /* ---------------- rotating special fishing events ---------------- */
 const SPECIAL_POOL_MS = 3 * 60 * 1000;
@@ -281,6 +295,64 @@ function buildPool(loc){
   const t = G.state.time, w = G.state.weather;
   list = list.filter(f => (f.time==='Any'||f.time===t) && (f.weather==='Any'||f.weather===w));
   return { list, poolMod, levi, name:loc.name, island:loc.island||null, pool:loc.pool||null };
+}
+
+/* ---------------- deployable Autopet ---------------- */
+const AUTOPET_CAPACITY=100, AUTOPET_CAST_TIME=30, AUTOPET_COLLECT_RANGE=175;
+function deployAutopet(id){
+  if(!save.autopets[id] || !AUTOPETS[id]) return;
+  if(save.autopetStation){ toast('🐾 Recall your deployed Autopet first.','bad'); return; }
+  if(G.player.onFoot){ toast('🚤 Board your boat before deploying an Autopet.','bad'); return; }
+  if(detectLoc().island){ toast('🌊 Sail into open water before deploying it.','bad'); return; }
+  const b=G.boat, side=105;
+  save.autopetStation={pet:id,x:Math.max(90,Math.min(WORLD_W-90,b.x+Math.cos(b.head)*side)),y:Math.max(90,Math.min(WORLD_H-90,b.y+Math.sin(b.head)*side)),caught:[],timer:AUTOPET_CAST_TIME};
+  persist(); UI.refreshInv(); toast((AUTOPETS[id].emoji||'🐾')+' Autopet deployed — it catches one fish every 30 seconds.','good');
+}
+function autopetNearby(){
+  const s=save.autopetStation;
+  return !!s && !G.player.onFoot && Math.hypot(G.boat.x-s.x,G.boat.y-s.y)<=AUTOPET_COLLECT_RANGE;
+}
+function tickAutopet(dt){
+  const s=save.autopetStation; if(!s || s.caught.length>=AUTOPET_CAPACITY) return;
+  s.timer-=dt;
+  if(s.timer>0) return;
+  s.timer=AUTOPET_CAST_TIME;
+  const loc=detectLocAt(s.x,s.y), pool=buildPool(loc);
+  if(!pool.list.length) return;
+  const oldPool=G.fish.pool; G.fish.pool=pool;
+  const f=pickNormalFish(pool.list), c=f?makeCatch(f,statSums()):null;
+  G.fish.pool=oldPool;
+  if(c && !c.relic){ c.perfect=false; c.autopet=true; s.caught.push(c); persist(); }
+}
+function collectAutopet(){
+  const s=save.autopetStation;
+  if(!s || !autopetNearby()){ toast('🚤 Sail close to your Autopet to collect its catch.','bad'); return; }
+  if(!s.caught.length){ toast('🐾 Nothing caught yet — next catch in '+Math.ceil(s.timer)+'s.','bad'); return; }
+  const batch=s.caught.splice(0);
+  for(const c of batch){
+    save.caught.push(c); save.index[c.name]=true; save.stats.totalCaught++;
+    if(c.huge) save.stats.big++;
+    save.stats.maxWt=Math.max(save.stats.maxWt,c.wt);
+    updateQuests(c); updateBounties(c); checkIndexCompletion(c.name);
+  }
+  while(save.caught.length>250) save.caught.shift();
+  persist(); UI.refreshInv(); UI.updateHud();
+  toast('🐾 Collected '+batch.length+' fish from your Autopet!','good');
+}
+function recallAutopet(){
+  if(!save.autopetStation) return;
+  if(!autopetNearby()){ toast('🚤 Sail close to your Autopet before recalling it.','bad'); return; }
+  if(save.autopetStation.caught.length){ collectAutopet(); if(save.autopetStation.caught.length) return; }
+  save.autopetStation=null; persist(); UI.refreshInv(); updateAutopetButton(); toast('🐾 Autopet recalled.','good');
+}
+function updateAutopetButton(){
+  const btn=byId('btnPet'), s=save.autopetStation; if(!btn) return;
+  const near=autopetNearby(); btn.classList.toggle('hidden',!near);
+  if(!near || !s) return;
+  const p=worldToScreen(s.x,s.y), count=s.caught.length;
+  btn.style.left=Math.max(74,Math.min(W-74,p.x))+'px';
+  btn.style.top=Math.max(78,Math.min(H-150,p.y-58))+'px';
+  byId('petBtnLbl').textContent=count ? 'COLLECT '+count+'/100' : 'NEXT '+Math.ceil(s.timer)+'s';
 }
 
 function pickFromWeighted(pairs){
@@ -601,12 +673,7 @@ function resolveCatch(){
   checkIndexCompletion(c.name);
   addXp(xp);
   let sold = null;
-  if(save.autoSell && (save.autopets.vlad || save.autopets.levi)){
-    const v = c.val + bonusCoins;
-    save.coins += v; save.lifetime += v; save.stats.totalSold++;
-    c.sold = true; sold = v;
-    save.caught = save.caught.filter(x => x !== c);
-  } else if(bonusCoins > 0){
+  if(bonusCoins > 0){
     save.coins += bonusCoins; save.lifetime += bonusCoins;
   }
   if(stat.ench && stat.ench.name==='Double Up!!' && Math.random() < 0.25){
@@ -849,7 +916,7 @@ function useItem(key){
   if(!save.items[key]) return;
   if(key === 'speedP'){ save.items[key]--; save.potionSpeed = 5; toast('🧪 Speed Potion: instant bites for 5 casts!', 'gold'); }
   else if(key === 'luckP'){ save.items[key]--; save.potionLuck = 5; toast('🍀 Luck Potion: 1.5x luck for 5 casts!', 'gold'); }
-  else if(key === 'egg'){ save.items[key]--; save.autopets.levi = true; toast('🐣 The egg hatches — Leviathan Autopet!', 'good'); save.autoSell = true; }
+  else if(key === 'egg'){ save.items[key]--; save.autopets.levi = true; toast('🐣 The egg hatches — deploy your Leviathan Autopet from Inventory!', 'good'); }
   else if(key === 'scrap'){ return; }
   persist(); UI.refreshInv(); UI.updateHud();
 }
@@ -2285,6 +2352,18 @@ function drawBoat(){
   drawBoatSprite(ctx, save.boat, boatScale);
   ctx.restore();
 }
+function drawAutopet(){
+  const s=save.autopetStation; if(!s) return;
+  const pet=AUTOPETS[s.pet]||{emoji:'🐾',name:'Autopet'};
+  ctx.save(); applyWorldTransform(ctx); ctx.translate(s.x,s.y);
+  const bob=Math.sin(G.frame*.055)*4;
+  ctx.fillStyle='rgba(0,12,24,.3)'; ctx.beginPath(); ctx.ellipse(0,10,25,9,0,0,Math.PI*2); ctx.fill();
+  ctx.font='30px system-ui,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.shadowColor='#54e8ff'; ctx.shadowBlur=14; ctx.fillText(pet.emoji,0,bob-4); ctx.shadowBlur=0;
+  ctx.fillStyle='rgba(3,18,31,.9)'; ctx.beginPath(); ctx.roundRect(-38,24,76,18,8); ctx.fill();
+  ctx.fillStyle=s.caught.length>=AUTOPET_CAPACITY?'#ffd166':'#dff8ff'; ctx.font='800 9px system-ui,sans-serif';
+  ctx.fillText(s.caught.length+'/100',0,33); ctx.restore();
+}
 function updateLandAvatar(){
   const el=byId('landAvatar');
   if(!G.player.onFoot){ el.classList.add('hidden'); return; }
@@ -2378,6 +2457,11 @@ function drawMinimap(){
     mctx.beginPath(); mctx.arc(p.x*sx, p.y*sy, 4*pulse, 0, Math.PI*2); mctx.stroke();
     mctx.globalAlpha = 1;
   });
+  if(save.autopetStation){
+    const s=save.autopetStation;
+    mctx.fillStyle='#54e8ff'; mctx.font='10px system-ui,sans-serif'; mctx.textAlign='center';
+    mctx.fillText((AUTOPETS[s.pet]&&AUTOPETS[s.pet].emoji)||'🐾',s.x*sx,s.y*sy+3);
+  }
   const lv = leviStatus();
   if(lv.active){
     mctx.fillStyle = 'rgba(255,80,90,.8)';
@@ -2424,6 +2508,7 @@ function loop(t){
   G.state.weatherT += delta;
   G.state.timeT += delta;
   updateSpecialPools(false);
+  tickAutopet(delta);
   if(G.state.weatherT > G.state.weatherDur){ G.state.weatherT = 0; nextWeather(); }
   if(G.state.timeT > 180){ G.state.timeT = 0; advanceTime(); }
 
@@ -2472,6 +2557,8 @@ function loop(t){
   drawIslands();
   updateIslandSigns();
   drawBoat();
+  drawAutopet();
+  updateAutopetButton();
   updateLandAvatar();
   drawOverlays();
   Multi.draw();
@@ -2493,6 +2580,7 @@ const Game = {
   claimQuest, claimBounty, genBounties, updateBounties, questUnlocked, activeQuests, questProg,
   grantTitle, equipTitle, checkTitle, checkIndexCompletion, addXp, xpNeed, addItem,
   itemCanShow, leviStatus, leviHealth, leviHunterCount, relicToKey, locName, effLuck, effAtt, fishValue, toggleLand,
+  deployAutopet, collectAutopet, recallAutopet,
   updateHud, resetSave, questMap: ()=>QUESTS,
   titles: ()=>TITLES, codes: ()=>CODES, poolMods: POOL_MODS,
   activeSpecialPools: ()=>POOLS.map(p=>Object.assign({},p)),
