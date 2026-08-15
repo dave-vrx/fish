@@ -92,6 +92,7 @@ input{font-family:inherit}
 }
 #landAvatar{position:fixed;left:0;top:0;z-index:7;pointer-events:none;transform:translate(-50%,-100%);text-align:center;filter:drop-shadow(0 4px 3px rgba(0,0,0,.35))}
 #islandSignLayer{position:fixed;inset:0;z-index:6;pointer-events:none;overflow:hidden}.island-sign{position:absolute;min-width:76px;max-width:128px;padding:5px 8px;border:2px solid #4a2f17;border-radius:7px;background:linear-gradient(135deg,#a66b32,#61391b);color:#ffe9c9;font:900 11px/1.08 system-ui,sans-serif;text-align:center;text-shadow:0 1px 1px #281306;box-shadow:inset 0 1px rgba(255,224,169,.3),0 4px 5px rgba(0,0,0,.28);transform:translate(-50%,-100%);transform-origin:center bottom}.island-sign:after{content:"";position:absolute;z-index:-1;left:50%;top:100%;width:7px;height:30px;transform:translateX(-50%);background:linear-gradient(90deg,#5d3519,#a56a31 52%,#4a2a14);border-radius:0 0 2px 2px;box-shadow:2px 3px 3px rgba(0,0,0,.24)}
+#scrapLayer{position:fixed;inset:0;z-index:7;pointer-events:none;overflow:hidden}.daily-scrap{position:absolute;display:grid;place-items:center;width:34px;height:34px;transform:translate(-50%,-50%);pointer-events:auto;border:2px solid #a7d8e8;border-radius:50%;background:radial-gradient(circle at 35% 30%,#e8f7fb,#7895a1 52%,#344c58);font-size:18px;filter:drop-shadow(0 4px 4px rgba(0,0,0,.55));animation:scrapBob 1.8s ease-in-out infinite}.daily-scrap.near{width:44px;height:44px;border-color:#fff3a4;box-shadow:0 0 0 5px rgba(255,220,90,.2),0 0 20px rgba(255,220,90,.75)}@keyframes scrapBob{50%{transform:translate(-50%,calc(-50% - 5px)) rotate(8deg)}}
 .land-walker{--skin:#d89b73;--hair:#75442e;--outfit:#2fc3c9;position:relative;width:34px;height:49px;margin:1px auto 0;filter:drop-shadow(0 5px 3px rgba(0,0,0,.3))}
 .land-walker i{position:absolute;display:block;box-sizing:border-box}
 .avatar-head{z-index:2;left:10px;top:7px;width:14px;height:15px;border-radius:48% 48% 45% 45%;background:var(--skin);border:1px solid rgba(35,22,20,.18)}
@@ -554,13 +555,20 @@ body{min-height:var(--app-height,100dvh)}
   .modal{padding:22px 16px calc(22px + var(--safe-b));max-height:92dvh}.modal h1{font-size:21px}
   .shop-item,.inv-item,.quest-item,.bounty-item,.enchant-row{padding:11px 9px;gap:8px}
   #fishUI{bottom:calc(var(--nav-h) + 8px + var(--safe-b));width:calc(100vw - 16px);padding:10px 12px;gap:7px}.reel{height:min(170px,25vh)}
+  #veilBoard .modal{height:min(90dvh,720px);max-height:90dvh;display:flex;flex-direction:column;overflow:hidden}
+  #veilBoard .modal-sub{margin-bottom:7px}#veilBoard .board-toolbar{flex:none;margin-bottom:7px;flex-wrap:wrap}
+  #veilBoard .lb-list{flex:1;min-height:220px;max-height:none;overflow-y:auto;padding-bottom:4px}
+  #veilBoard .modal-actions{flex:none;margin-top:8px}
+  #veilBoard .lb-row{display:grid;grid-template-columns:36px minmax(0,1fr);gap:4px 8px;padding:9px}
+  #veilBoard .lb-rank{grid-row:1/3;align-self:center}#veilBoard .lb-name{grid-column:2;min-width:0}
+  #veilBoard .lb-val{grid-column:2;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+  #veilBoard .lb-val .lv{white-space:normal;font-size:9px}#veilBoard .lb-val .pts{font-size:12px}
 }
 
 @media (max-width:430px){
   #chipFriends{display:none}.chip.icon-only{padding:6px 7px}
   #chipName{max-width:112px}.lv-pill{padding:2px 5px}
   #minimapWrap{transform:scale(.72)}
-  #bottomNav button:nth-child(5){display:none}
   .gear-strip .gear:nth-child(2){display:none}
   .fish-tip{display:none}
 }

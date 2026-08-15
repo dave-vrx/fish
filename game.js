@@ -44,7 +44,7 @@ function freshSave(){
     quests: { done: {}, active: {} },
     titles: { done: {} }, selectedTitle: '',
     codes: {},
-    autopets: {}, autoSell: false, autopetStation:null, badges: {},
+    autopets: {}, autoSell: false, autopetStation:null, dailyScrap:{date:'',collected:{}}, badges: {},
     avatar: { gender:'female', skin:'warm', hair:'long', hairColor:'brown', outfit:'teal' },
     potionLuck: 0, potionSpeed: 0,
     bounties: { date: '', list: [] },
@@ -63,6 +63,7 @@ function loadSave(){
       save.autopetStation.timer=Math.max(0,Number(save.autopetStation.timer)||0);
     }
     save.autoSell=false;
+    save.dailyScrap=Object.assign({date:'',collected:{}},raw.dailyScrap||{});
     save.quests = Object.assign({done:{},active:{}}, raw.quests||{});
     save.titles = Object.assign({done:{}}, raw.titles||{});
     save.selectedTitle = (raw.selectedTitle && save.titles.done[raw.selectedTitle]) ? raw.selectedTitle : '';
@@ -277,6 +278,56 @@ function updateSpecialPools(force){
   if(!firstRun) toast('🌊 Special events moved: '+POOLS.map(p=>p.name).join(' + '),'gold');
   return true;
 }
+
+/* ---------------- daily island scrap ---------------- */
+const DAILY_SCRAP_COUNT=10, SCRAP_ISLANDS=['coconut','crescent','tanglewood','luxian'];
+let SCRAP_CACHE={date:'',spots:[]};
+function scrapDay(){ return new Date().toISOString().slice(0,10); }
+function dailyScrapSpots(){
+  const date=scrapDay(); if(SCRAP_CACHE.date===date) return SCRAP_CACHE.spots;
+  let seed=2166136261; for(const ch of date){ seed^=ch.charCodeAt(0); seed=Math.imul(seed,16777619); }
+  const rng=mulberry(seed), spots=[];
+  for(let i=0;i<DAILY_SCRAP_COUNT;i++){
+    const isl=islandById(SCRAP_ISLANDS[i%SCRAP_ISLANDS.length]);
+    const angle=rng()*Math.PI*2, radius=isl.r*(.20+rng()*.42);
+    spots.push({id:String(i),island:isl.id,x:isl.x+Math.cos(angle)*radius,y:isl.y+Math.sin(angle)*radius});
+  }
+  SCRAP_CACHE={date,spots}; return spots;
+}
+function ensureDailyScrap(){
+  const date=scrapDay();
+  if(save.dailyScrap.date!==date){ save.dailyScrap={date,collected:{}}; persist(); }
+}
+function collectDailyScrap(id){
+  ensureDailyScrap();
+  const spot=dailyScrapSpots().find(s=>s.id===String(id));
+  if(!spot||save.dailyScrap.collected[spot.id]) return;
+  if(!G.player.onFoot||G.player.island!==spot.island||Math.hypot(G.player.x-spot.x,G.player.y-spot.y)>72){
+    toast('🧍 Get out of your boat and walk closer to collect this scrap.','bad'); return;
+  }
+  save.dailyScrap.collected[spot.id]=true; addItem('scrap',1); persist(); UI.refreshInv();
+  const left=DAILY_SCRAP_COUNT-Object.keys(save.dailyScrap.collected).length;
+  toast('⚙️ Scrap Metal collected! '+left+' left today.','good'); updateDailyScrap();
+}
+function updateDailyScrap(){
+  ensureDailyScrap();
+  const layer=byId('scrapLayer'); if(!layer) return;
+  const spots=dailyScrapSpots();
+  if(layer.dataset.date!==scrapDay()){
+    layer.dataset.date=scrapDay();
+    layer.innerHTML=spots.map(s=>'<button class="daily-scrap" data-scrap="'+s.id+'" onclick="Game.collectDailyScrap(\''+s.id+'\')" aria-label="Collect Scrap Metal">⚙️</button>').join('');
+  }
+  for(const spot of spots){
+    const el=layer.querySelector('[data-scrap="'+spot.id+'"]'); if(!el) continue;
+    if(save.dailyScrap.collected[spot.id]){ el.style.display='none'; continue; }
+    const p=worldToScreen(spot.x,spot.y), visible=p.x>-40&&p.x<W+40&&p.y>-40&&p.y<H+40;
+    el.style.display=visible?'grid':'none';
+    if(visible){
+      const near=G.player.onFoot&&G.player.island===spot.island&&Math.hypot(G.player.x-spot.x,G.player.y-spot.y)<=72;
+      el.classList.toggle('near',near); el.style.left=p.x+'px'; el.style.top=p.y+'px';
+    }
+  }
+}
 const SECRET_LOC = {};
 (function(){
   for(const f of BY_LOC['Secret Fish']){
@@ -436,8 +487,8 @@ function rollMutation(){
 }
 
 function relicWeight(){
-  return { 'Old Relic Piece':40, 'Mossy Relic':30, 'Powerful Relic':20,
-    'Mysterious Red Gem':3.5, 'Ghastly Skull':3.5, 'Dimensional Dongle':2.5, 'Fuel Compositor':1.5 };
+  return { 'Old Relic Piece':52, 'Mossy Relic':29, 'Powerful Relic':12,
+    'Mysterious Red Gem':2, 'Ghastly Skull':2, 'Dimensional Dongle':1.8, 'Fuel Compositor':1.2 };
 }
 
 function rollFish(){
@@ -455,9 +506,9 @@ function rollFish(){
   const r = Math.random();
   let roll;
   if(r < 0.0011){ roll = { type:'secret' }; }
-  else if(r < 0.0011 + (ancient?0.0075:0.0025)){ roll = { type:'relic' }; }
-  else if(r < 0.0011 + (ancient?0.0075:0.0025) + 0.09){ roll = { type:'trash' }; }
-  else if(r < 0.0011 + (ancient?0.0075:0.0025) + 0.09 + 0.03){ roll = { type:'event' }; }
+  else if(r < 0.0011 + (ancient?0.05:0.025)){ roll = { type:'relic' }; }
+  else if(r < 0.0011 + (ancient?0.05:0.025) + 0.09){ roll = { type:'trash' }; }
+  else if(r < 0.0011 + (ancient?0.05:0.025) + 0.09 + 0.03){ roll = { type:'event' }; }
   else roll = { type:'normal' };
 
   if(roll.type === 'secret'){
@@ -2580,6 +2631,7 @@ function loop(t){
   drawOcean();
   drawIslands();
   updateIslandSigns();
+  updateDailyScrap();
   drawBoat();
   drawAutopet();
   updateAutopetButton();
@@ -2604,7 +2656,7 @@ const Game = {
   claimQuest, claimBounty, genBounties, updateBounties, questUnlocked, activeQuests, questProg,
   grantTitle, equipTitle, checkTitle, checkIndexCompletion, addXp, xpNeed, addItem,
   itemCanShow, leviStatus, leviHealth, leviHunterCount, relicToKey, locName, effLuck, effAtt, fishValue, toggleLand,
-  deployAutopet, collectAutopet, recallAutopet, autopetAction,
+  deployAutopet, collectAutopet, recallAutopet, autopetAction, collectDailyScrap,
   updateHud, resetSave, questMap: ()=>QUESTS,
   titles: ()=>TITLES, codes: ()=>CODES, poolMods: POOL_MODS,
   activeSpecialPools: ()=>POOLS.map(p=>Object.assign({},p)),
@@ -2615,6 +2667,7 @@ const Game = {
   init(){
     loadSave();
     updateSpecialPools(true);
+    ensureDailyScrap();
     resize();
     bindInput();
     genBounties();
