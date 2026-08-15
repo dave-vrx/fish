@@ -81,6 +81,14 @@ input{font-family:inherit}
   border:1px solid #ff7d8e;color:#ffd2d8;font-size:12px;font-weight:800;box-shadow:var(--shadow);
 }
 
+/* ============ BUBBLES! ============ */
+#bubblesWrap{position:fixed;top:calc(166px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:9;width:min(88vw,430px);text-align:center;pointer-events:none}
+.bubbles-banner{padding:8px 14px;border:1px solid #8dffb8;border-radius:12px;background:linear-gradient(90deg,rgba(17,54,38,.94),rgba(30,112,73,.94),rgba(17,54,38,.94));color:#d9ffe8;font-size:13px;box-shadow:0 0 20px rgba(60,255,140,.24);animation:bubblesPulse 1.25s ease-in-out infinite}
+.bubbles-banner b{color:#fff59a;letter-spacing:.5px}.bubbles-warning{margin-top:6px;color:#ffda72;font-size:11px;font-weight:900;text-shadow:0 2px 4px #00150a}.bubbles-timer{margin-top:3px;color:#b9ffd4;font-size:12px;font-weight:900}
+@keyframes bubblesPulse{50%{transform:translateY(-2px) scale(1.015);filter:brightness(1.15)}}
+#bubblesCountWrap{position:fixed;bottom:calc(var(--nav-h) + 14px + var(--safe-b));left:10px;z-index:6}
+#bubblesCountdown{display:inline-block;padding:5px 10px;border:1px solid #69e99c;border-radius:999px;background:rgba(12,65,42,.92);color:#caffdd;font-size:12px;font-weight:900;box-shadow:var(--shadow)}
+
 /* ============ LOCATION TAG ============ */
 #locTag{
   position:fixed;left:50%;bottom:calc(var(--nav-h) + 12px + var(--safe-b));transform:translateX(-50%);
