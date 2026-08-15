@@ -13,6 +13,7 @@ const Multi = (()=>{
   const PRES_URL='https://mantledb.sh/v2/fishvr/presence';
   const CHAT_URL='https://mantledb.sh/v2/fishvr/chat';
   const ANN_URL='https://mantledb.sh/v2/fishvr/announcement';
+  const BUBBLES_URL='https://mantledb.sh/v2/fishvr/bubbles';
   const COLORS=['#ff5d6c','#ffd166','#46e0a0','#3ee0ff','#c58cff','#ff9de8','#ff8c00','#ff6b9d','#b6ff5e','#7fe7ff'];
   const PRES_INT=1200, CHAT_INT=1400, STALE=22000, BUBBLE_MS=7000;
 
@@ -119,6 +120,29 @@ const Multi = (()=>{
       lastAnnouncement=a.id; showAnnouncement(a);
     }catch(e){}
   }
+  async function fetchBubbles(){
+    try{
+      const r=await fetch(BUBBLES_URL,{cache:'no-store'}); if(!r.ok) return;
+      const d=await r.json(), event=d&&d.event;
+      if(window.Bubbles) Bubbles.receive(event||null);
+    }catch(e){}
+  }
+  function triggerBubbles(msg){
+    const event={id:'bubbles:'+msg.id,at:msg.at,endsAt:msg.at+BUBBLES_DURATION,
+      triggeredBy:(msg.name||'Angler').slice(0,16),cleared:false};
+    if(window.Bubbles) Bubbles.receive(event);
+    fetch(BUBBLES_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event,updated:msg.at})}).catch(()=>{});
+  }
+  async function clearBubbles(event){
+    if(!event||!event.id) return;
+    try{
+      const r=await fetch(BUBBLES_URL,{cache:'no-store'});
+      const d=r.ok?await r.json():null, current=d&&d.event;
+      if(!current||current.id!==event.id) return;
+      const now=Date.now(), cleared=Object.assign({},current,{cleared:true,clearedAt:now,endsAt:now});
+      await fetch(BUBBLES_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:cleared,updated:now})});
+    }catch(e){}
+  }
   function showAnnouncement(a){
     const el=byId('globalAnnouncement'); if(!el) return;
     el.textContent=a.system
@@ -160,6 +184,7 @@ const Multi = (()=>{
       }catch(e){}
     })();
     pushChat(msg);
+    if(/\bbubbles\b/i.test(text)) triggerBubbles(msg);
   }
 
   function pushChat(m){
@@ -403,7 +428,7 @@ const Multi = (()=>{
     if(started) return;
     started=true;
     pid(); myColor();
-    const pulse=()=>{ sendPos(); fetchPlayers(); fetchChat(); fetchAnnouncement(); };
+    const pulse=()=>{ sendPos(); fetchPlayers(); fetchChat(); fetchAnnouncement(); fetchBubbles(); };
     pulse();
     setInterval(pulse, PRES_INT);
     setInterval(fetchChat, CHAT_INT);
@@ -419,7 +444,7 @@ const Multi = (()=>{
   }
   function init(){ start(); }
 
-  return { init, start, toggle, openAnnouncer, send:sendChat, announce:sendAnnouncement, showSystemAnnouncement, tick, draw,
+  return { init, start, toggle, openAnnouncer, send:sendChat, announce:sendAnnouncement, showSystemAnnouncement, clearBubbles, tick, draw,
     get online(){ return online; }, get players(){ return players; }, get open(){ return open; } };
 })();
 window.Multi=Multi;

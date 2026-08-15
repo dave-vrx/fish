@@ -89,7 +89,7 @@ function resetSave(){
 /* ---------------- state ---------------- */
 const G = {
   get save(){ return save; },
-  state: { weather:'Clear', time:'Day', weatherT:0, timeT:0, levi:null, running:false },
+  state: { weather:'Clear', time:'Day', weatherT:0, timeT:0, levi:null, bubbles:null, running:false },
   cam: { x:650, y:700, zoom:0.7 },
   boat: { x:650, y:700, head:-Math.PI/2, speed:0, boost:0, boostCd:0 },
   player: { onFoot:false, x:650, y:700, head:0, island:null },
@@ -98,7 +98,7 @@ const G = {
   fish: { state:'idle', pool:null, t:0, biteAt:0, game:null, catch:null },
   effects: [], sparkles: [],
   blockedIsland: null,
-  saveTimer: 0, hudTimer: 0, mmTimer: 0, leviSyncTimer: 0, leviAnnouncedHour: '', specialPoolSlot: -1, pinkTrailTimer: 0, witchTrailTimer: 0, jackTrailTimer: 0, betaTrailTimer: 0, betaTrailIndex: 0, weatherDur: 0,
+  saveTimer: 0, hudTimer: 0, mmTimer: 0, leviSyncTimer: 0, leviAnnouncedHour: '', bubblesClaimedId: '', specialPoolSlot: -1, pinkTrailTimer: 0, witchTrailTimer: 0, jackTrailTimer: 0, betaTrailTimer: 0, betaTrailIndex: 0, weatherDur: 0,
   frame: 0
 };
 const Fishing = { lastBiteCheck:0, held:false, lastStatus:'' };
@@ -202,6 +202,37 @@ function announceLeviathanDefeat(health){
     Multi.showSystemAnnouncement('🏆 BABY LEVIATHAN DEFEATED! '+winner+' landed the final catch!');
   }
 }
+function receiveBubblesEvent(event){
+  const current=G.state.bubbles;
+  if(!event||event.cleared||Number(event.endsAt)<=Date.now()){
+    if(!current||!event||event.id===current.id||Number(event.at)>=Number(current.at)) G.state.bubbles=null;
+    return;
+  }
+  if(!current||Number(event.at)>=Number(current.at)) G.state.bubbles=event;
+}
+function bubblesActiveEvent(){
+  const event=G.state.bubbles;
+  if(!event||event.cleared||Number(event.endsAt)<=Date.now()){
+    if(event) G.state.bubbles=null;
+    return null;
+  }
+  return event;
+}
+function tickBubbles(){
+  const event=bubblesActiveEvent();
+  if(!event||G.bubblesClaimedId===event.id) return;
+  const actor=G.player.onFoot?G.player:G.boat;
+  if(Math.hypot(actor.x-BUBBLES_SPOT.x,actor.y-BUBBLES_SPOT.y)>=BUBBLES_SPOT.r) return;
+  G.bubblesClaimedId=event.id;
+  const taken=Math.min(40,Math.max(0,save.coins));
+  save.coins=Math.max(0,save.coins-40);
+  persist(); updateHud();
+  toast('🐍 BUBBLES! took $'+taken+' and vanished!','bad');
+  G.state.bubbles=null;
+  if(window.Multi&&Multi.clearBubbles) Multi.clearBubbles(event);
+}
+const Bubbles={receive:receiveBubblesEvent};
+window.Bubbles=Bubbles;
 function leviHunterCount(){
   let n=0;
   if(Math.hypot(G.boat.x-LEVIATHAN_SPOT.x,G.boat.y-LEVIATHAN_SPOT.y)<LEVIATHAN_SPOT.r) n++;
@@ -1474,6 +1505,17 @@ function updateHud(){
     byId('leviWrap').classList.add('hidden');
     byId('leviCountWrap').classList.add('hidden');
   }
+  const bubbles=bubblesActiveEvent();
+  if(bubbles){
+    const rem=Math.max(0,Number(bubbles.endsAt)-Date.now()), time=mmss(rem/1000);
+    byId('bubblesWrap').classList.remove('hidden');
+    byId('bubblesCountWrap').classList.remove('hidden');
+    byId('bubblesTimer').textContent='Vanishes in '+time;
+    byId('bubblesCountdown').textContent='🐍 BUBBLES! · '+time;
+  }else{
+    byId('bubblesWrap').classList.add('hidden');
+    byId('bubblesCountWrap').classList.add('hidden');
+  }
 }
 function mmss(sec){
   sec = Math.max(0, Math.floor(sec));
@@ -2164,6 +2206,8 @@ function drawIslands(){
     try{ drawBabyLeviathan(LEVIATHAN_SPOT, leviHealth()); }
     catch(e){ console.error('Baby Leviathan render failed:', e); }
   }
+  const bubbles=bubblesActiveEvent();
+  if(bubbles) drawBubblesBoss(BUBBLES_SPOT,bubbles);
   ctx.restore();
 }
 
@@ -2214,6 +2258,49 @@ function drawBabyLeviathan(s, health){
   ctx.fillStyle='#ffe8a8'; ctx.fillText('BABY LEVIATHAN  '+health.hp+'/'+health.maxHp+' · '+Math.max(1,health.hunters||1)+' HUNTER'+((health.hunters||1)===1?'':'S'),x,barY-10);
   ctx.fillStyle='rgba(255,255,255,.16)'; leviRoundRect(x-w/2,barY,w,h,5); ctx.fill();
   if(ratio>0){ ctx.fillStyle=ratio>.4?'#ff6b70':'#ff334f'; leviRoundRect(x-w/2,barY,Math.max(5,w*ratio),h,5); ctx.fill(); }
+}
+
+function drawBubblesBoss(s,event){
+  const t=G.frame*.045, bob=Math.sin(t*1.7)*7, sway=Math.sin(t*.85)*18;
+  const x=s.x+sway*.35, y=s.y+bob;
+  ctx.save();
+  const aura=ctx.createRadialGradient(s.x,s.y,12,s.x,s.y,s.r);
+  aura.addColorStop(0,'rgba(80,255,145,.16)'); aura.addColorStop(.72,'rgba(38,160,91,.12)'); aura.addColorStop(1,'rgba(32,235,113,0)');
+  ctx.fillStyle=aura; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(108,255,164,'+(.65+.2*Math.sin(t*2))+')'; ctx.lineWidth=3; ctx.setLineDash([10,7]); ctx.lineDashOffset=-G.frame*.65;
+  ctx.beginPath(); ctx.arc(s.x,s.y,s.r*.92,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.strokeStyle='#123d2d'; ctx.lineWidth=34;
+  ctx.beginPath(); ctx.moveTo(x-62,y+42); ctx.quadraticCurveTo(x-5+Math.sin(t)*28,y+82,x+55,y+35); ctx.quadraticCurveTo(x+94,y+3,x+42,y-24); ctx.stroke();
+  ctx.strokeStyle='#35a65f'; ctx.lineWidth=25;
+  ctx.beginPath(); ctx.moveTo(x-62,y+42); ctx.quadraticCurveTo(x-5+Math.sin(t)*28,y+82,x+55,y+35); ctx.quadraticCurveTo(x+94,y+3,x+42,y-24); ctx.stroke();
+  ctx.strokeStyle='#71df8f'; ctx.lineWidth=6;
+  ctx.beginPath(); ctx.moveTo(x-55,y+38); ctx.quadraticCurveTo(x,y+67,x+50,y+31); ctx.stroke();
+
+  const heads=[{x:x-31+sway*.4,y:y-47+Math.sin(t*2.1)*5,a:-.18},{x:x+31-sway*.35,y:y-48+Math.cos(t*1.9)*5,a:.18}];
+  for(let i=0;i<2;i++){
+    const h=heads[i];
+    ctx.strokeStyle='#174a32'; ctx.lineWidth=22; ctx.beginPath(); ctx.moveTo(x+(i?20:-20),y+28); ctx.quadraticCurveTo(h.x+(i?-12:12),y-4,h.x,h.y+13); ctx.stroke();
+    ctx.save(); ctx.translate(h.x,h.y); ctx.rotate(h.a+Math.sin(t+i*2)*.08);
+    ctx.fillStyle='#49bd69'; ctx.strokeStyle='#113b29'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.ellipse(0,0,27,19,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#baff87'; ctx.beginPath(); ctx.ellipse(8,3,13,8,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fff7a8'; for(const ex of [-9,8]){ctx.beginPath();ctx.arc(ex,-6,5,0,Math.PI*2);ctx.fill();}
+    ctx.fillStyle='#151616'; for(const ex of [-9,8]){ctx.beginPath();ctx.arc(ex,-6,2.4,0,Math.PI*2);ctx.fill();}
+    ctx.strokeStyle='#ff6f9d';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(19,5);ctx.lineTo(33,8);ctx.moveTo(33,8);ctx.lineTo(39,4);ctx.moveTo(33,8);ctx.lineTo(38,13);ctx.stroke();
+    ctx.restore();
+  }
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='1000 14px system-ui,sans-serif';ctx.fillStyle='#fff58d';ctx.strokeStyle='rgba(0,30,15,.9)';ctx.lineWidth=4;
+  ctx.strokeText('BUBBLES!',x,y-88);ctx.fillText('BUBBLES!',x,y-88);
+  const elapsed=Math.max(0,Date.now()-Number(event.at)), speechPhase=Math.floor(elapsed/2000);
+  if(elapsed%2000<1550){
+    const h=heads[(speechPhase*1103515245+12345)>>>30&1], sx=h.x+(speechPhase%3-1)*8, sy=h.y-40;
+    ctx.font='900 12px system-ui,sans-serif'; const text='Helllloooooo', w=ctx.measureText(text).width+18;
+    ctx.fillStyle='rgba(247,255,239,.96)';ctx.strokeStyle='#217b47';ctx.lineWidth=2;leviRoundRect(sx-w/2,sy-13,w,26,10);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#174b2d';ctx.fillText(text,sx,sy);
+  }
+  ctx.restore();
 }
 
 function updateAltarBtn(){
@@ -2569,6 +2656,10 @@ function drawMinimap(){
     mctx.fillStyle = 'rgba(255,80,90,.8)';
     mctx.beginPath(); mctx.arc(LEVIATHAN_SPOT.x*sx, LEVIATHAN_SPOT.y*sy, 4, 0, Math.PI*2); mctx.fill();
   }
+  if(bubblesActiveEvent()){
+    mctx.fillStyle='#62ef91'; mctx.strokeStyle='rgba(190,255,210,.9)'; mctx.lineWidth=1;
+    mctx.beginPath(); mctx.arc(BUBBLES_SPOT.x*sx,BUBBLES_SPOT.y*sy,4.5,0,Math.PI*2); mctx.fill(); mctx.stroke();
+  }
   const left=Math.ceil(specialPoolTimeLeft()/1000), mins=Math.floor(left/60), secs=String(left%60).padStart(2,'0');
   mctx.fillStyle='rgba(2,14,25,.88)'; mctx.fillRect(0,mh-15,mw,15);
   mctx.fillStyle='#ccefff'; mctx.font='800 7px system-ui,sans-serif'; mctx.textAlign='center';
@@ -2625,6 +2716,7 @@ function loop(t){
   } else {
     updateBoat(delta*0.05);
   }
+  tickBubbles();
 
   G.curLoc = detectLoc();
   G.leviSyncTimer -= delta;
