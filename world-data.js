@@ -83,7 +83,7 @@ const CODES = [
   { code:'JACK',      reward:'Blackwake Corsair + JACK title', active:true, hidden:true, boats:['jack'], titles:['JACK'], badges:['jack'], equipTitle:'JACK', avatar:{gender:'male',skin:'warm',hair:'long',hairColor:'brown',outfit:'navy',special:'jack'} }
 ];
 
-/* Autopets — auto-sell your catches (toggle in Menu) */
+/* Autopets — deploy in open water to slowly fill a 100-fish holding tank. */
 const AUTOPETS = {
   vlad:{ name:'Vlad Autopet',  emoji:'🧛', how:'Redeemed the MAKESHIP code' },
   levi:{ name:'Leviathan Autopet', emoji:'🦈', how:'Hatched from the ominous egg quest' }
